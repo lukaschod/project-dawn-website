@@ -9,7 +9,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://lukaschod.github.io/project-dawn-website/',
+    site: 'https://lukaschod.github.io/',
+    base: `/project-dawn-website/`,
   integrations: [mdx(), sitemap()],
 
   vite: {
