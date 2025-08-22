@@ -1,0 +1,79 @@
+---
+import { reviews } from "../../data/reviews";
+
+interface Review {
+  author: string;
+  rating: number; // 1–5
+  headline: string;
+  text: string;
+  detail?: string;
+  date?: string;
+  package: string;
+}
+
+function getStars(rating: number) {
+  return Array.from({ length: 5 }, (_, i) => i < rating);
+}
+---
+
+<section class="w-full py-12 bg-background">
+  <div class="mx-auto max-w-6xl px-4">
+    <h2 class="text-3xl md:text-4xl font-semibold text-center mb-8 text-foreground">
+      What People Say
+    </h2>
+
+    <div class="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory" style="
+    padding-left: 32px;
+    margin-left: unset;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 32px;
+">
+      {reviews.map((review) => (
+        <article
+          key={review.author + review.date}
+          class="min-w-[280px] max-w-sm snap-start shrink-0 card-surface p-5 rounded-2xl shadow-md flex flex-col"
+        >
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-semibold text-base text-foreground">{review.author}</h3>
+            {review.date && (
+              <span class="text-xs text-[color:var(--color-text-muted)]">{review.date}</span>
+            )}
+          </div>
+
+          <p class="text-xs text-[color:var(--color-text-muted)] mb-2">
+            for <span class="font-medium text-foreground">{review.package}</span>
+          </p>
+
+          <div class="flex mb-2">
+            {getStars(review.rating).map((filled, i) => (
+              <svg
+                key={i}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill={filled ? "currentColor" : "none"}
+                stroke="currentColor"
+                class={`w-4 h-4 ${filled ? "text-yellow-400" : "text-gray-400"}`}
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.975a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.974c.299.922-.755 1.688-1.54 1.118l-3.386-2.46a1 1 0 00-1.175 0l-3.386 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.045 9.402c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.975z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            ))}
+          </div>
+
+          <p class="text-sm font-medium text-foreground mb-1 line-clamp-2">
+            {review.headline}
+          </p>
+
+          <p class="text-sm text-[color:var(--color-text-secondary)] line-clamp-3">
+            {review.text}
+          </p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+

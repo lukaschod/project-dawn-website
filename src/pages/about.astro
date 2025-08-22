@@ -1,26 +1,24 @@
 ---
 import Layout from '../layouts/BlogPost.astro';
 import GlowLineSeparator from '@/components/ui/separator/GlowLineSeparator.astro';
-const pageTitle = 'About Me';
+import WorkExperience from '../components/sections/WorkExperience.astro';
+import { work } from '../data/work';
+const pageTitle = 'About Me | Project Dawn';
 const pageDescription = 'Learn more about my background and approach to software engineering.';
 ---
 
-<Layout title={pageTitle} description={pageDescription} pubDate={new Date()} showHeader={false}>
+<Layout title={pageTitle} description={pageDescription} pubDate={new Date()} showHeader={false} readingTimeMin={2}>
   <p>
-    Hey! I'm a senior software engineer who loves designing reliable systems and shipping products that feel great to use.
+    I am a game and engine developer with over 10 years of experience in engine programming, game creation, and tools development. I’ve worked with several engines, including Unity, Bevy, and Phoenix, with more than 8 years dedicated to Unity engine development, driving major features and creating advanced tooling. I am also a self-published developer on the Unity Asset Store, releasing 9 commercial tools with over 40,000 downloads.
   </p>
   <p>
-    I work across the stack with TypeScript, Node.js, React/Next.js, and PostgreSQL. I care deeply about readable code,
-    strong tests, and observability. My approach: ship small, iterate quickly, measure outcomes.
+    My experience spans a broad range of engine components. On the graphics side, I’ve worked extensively with both low-level APIs (DirectX 12, DirectX 11, Vulkan, Metal) and high-level rendering systems, including Unity’s render pipelines and shader development. Beyond graphics, I’ve contributed to platform and mobile-specific systems, giving me deep insight into cross-platform engine challenges. I also have a strong passion for data-oriented design, with significant experience architecting systems around ECS principles for high-performance game development.
   </p>
   <p>
-    Recent highlights include leading a migration from a monolith to well‑scoped services, improving p95 latency,
-    and introducing CI/CD with preview environments and quality gates.
+    I am highly skilled in multiple programming languages, including C, C++, C#, and Rust, with Rust being my personal favorite. These languages have shaped my versatility in approaching engine development, enabling me to work effectively across low-level systems, high-performance code, and user-facing tools.
   </p>
-  <p>
-    Outside of feature work, I enjoy mentoring, documentation, and building design‑system components that make teams faster.
-    Always learning—and always happy to collaborate on meaningful problems.
-  </p>
+
+  <WorkExperience title="Work Experience" items={work} />
 
   <GlowLineSeparator />
 

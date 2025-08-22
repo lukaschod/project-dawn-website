@@ -1,0 +1,44 @@
+---
+import Button from "../ui/button/Button.astro";
+
+interface HeroSectionProps {
+  heroBg: string;
+  title: string;
+  subtitle?: string;
+  primaryCTA?: { text: string; href: string };
+  secondaryCTA?: { text: string; href: string };
+}
+
+const { heroBg, title, subtitle, primaryCTA, secondaryCTA } = Astro.props as HeroSectionProps;
+---
+
+<section
+  class="relative flex items-center justify-center w-full h-[70vh] bg-cover bg-center"
+  style={`background-image: url("${heroBg}");`}
+>
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/60"></div>
+
+  <!-- Content -->
+  <div class="relative z-10 max-w-xl px-6 text-center">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white drop-shadow-lg">
+      <span class="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)] bg-clip-text text-transparent">{title}</span>
+    </h1>
+
+    {subtitle && (
+      <p class="mt-4 text-xl md:text-3xl text-gray-200 drop-shadow-md text-justify drop-shadow-lg">
+        {subtitle}
+      </p>
+    )}
+
+    <div class="mt-8 flex flex-wrap justify-center gap-4">
+      {primaryCTA && (
+        <Button href={primaryCTA.href} variant="primary" size="md">{primaryCTA.text}</Button>
+      )}
+      {secondaryCTA && (
+        <Button href={secondaryCTA.href} variant="secondary" size="md">{secondaryCTA.text}</Button>
+      )}
+    </div>
+  </div>
+</section>
+

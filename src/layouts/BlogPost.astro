@@ -22,7 +22,7 @@ const { title, description, pubDate, updatedDate, heroImage, showHeader = true, 
 		<!-- Article specific OG meta -->
 		{pubDate && <meta property="article:published_time" content={new Date(pubDate).toISOString()} />}
 		{updatedDate && <meta property="article:modified_time" content={new Date(updatedDate).toISOString()} />}
-		<meta property="article:author" content={Astro.props.author || 'Site Author'} />
+		<meta property="article:author" content={Astro.props.author || 'Lukas Chodosevicius'} />
 		{Array.isArray(Astro.props.tags) && Astro.props.tags.map((t) => (
 		  <meta property="article:tag" content={t} />
 		))}
@@ -36,8 +36,8 @@ const { title, description, pubDate, updatedDate, heroImage, showHeader = true, 
 		  image: Astro.props.heroImage ? new URL(Astro.props.heroImage.src, Astro.site).toString() : undefined,
 		  datePublished: pubDate ? new Date(pubDate).toISOString() : undefined,
 		  dateModified: updatedDate ? new Date(updatedDate).toISOString() : undefined,
-		  author: [{ '@type': 'Person', name: Astro.props.author || 'Site Author' }],
-		  publisher: { '@type': 'Organization', name: 'guihubie.com' },
+		  author: [{ '@type': 'Person', name: Astro.props.author || 'Lukas Chodosevicius' }],
+		  publisher: { '@type': 'Organization', name: 'Project Dawn' },
 		  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).toString(),
 		  url: new URL(Astro.url.pathname, Astro.site).toString(),
 		})} />
@@ -123,7 +123,7 @@ const { title, description, pubDate, updatedDate, heroImage, showHeader = true, 
                         </div>
                     )}
                     <ShareButtons title={title} url={Astro.url.toString()} />
-					<PostMeta pubDate={pubDate} readingTimeMin={readingTimeMin} authorName={Astro.props.author || 'Site Author'} />
+					<PostMeta pubDate={pubDate} readingTimeMin={readingTimeMin} authorName={Astro.props.author || 'Lukas Chodosevicius'} />
                     <slot />
                     <PostNav prev={prevPost} next={nextPost} />
                 </div>

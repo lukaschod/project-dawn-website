@@ -1,0 +1,138 @@
+---
+import Button from "../ui/button/Button.astro";
+
+// HeroSection.astro
+interface HeroSectionProps {
+  heroBgs: string[];
+  title: string;
+  subtitle?: string;
+  primaryCTA?: { text: string; href: string };
+  secondaryCTA?: { text: string; href: string };
+  interval?: number;
+}
+
+const {
+  heroBgs,
+  title,
+  subtitle,
+  primaryCTA,
+  secondaryCTA,
+  interval = 5000,
+} = Astro.props as HeroSectionProps;
+
+// Map strings to actual imported images
+const images = heroBgs.map( async (path) => {
+  try {
+    return (await import(`../assets/images/${path}`)).default;
+  } catch {
+    console.warn(`Hero image not found: ${path}`);
+    return '';
+  }
+});
+---
+
+<section class="relative w-full h-[70vh] overflow-hidden" id="hero-slider">
+  <!-- Background images -->
+  {heroBgs.map((bg, index) => (
+    <div
+      class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+      style={`background-image: url("${bg}"); opacity: ${index === 0 ? 1 : 0}`}
+      data-index={index}
+    ></div>
+  ))}
+
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/60"></div>
+
+  <!-- Content -->
+  <div class="relative z-10 flex flex-col items-center justify-center h-full w-full px-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-24 max-w-5xl w-full">
+      <!-- Title -->
+      <div class="flex items-center">
+        <h1 class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg text-left leading-tight">
+          <span class="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-dark)] bg-clip-text text-transparent">{title}</span>
+        </h1>
+      </div>
+
+      <!-- Subtitle -->
+      {subtitle && (
+        <div class="flex items-center">
+          <p class="text-2xl md:text-3xl text-gray-200 drop-shadow-md text-left leading-snug drop-shadow-lg">
+            {subtitle}
+          </p>
+        </div>
+      )}
+    </div>
+
+    <!-- Buttons -->
+    <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+      {primaryCTA && (
+        <Button href={primaryCTA.href} variant="primary" size="md">{primaryCTA.text}</Button>
+      )}
+      {secondaryCTA && (
+        <Button href={secondaryCTA.href} variant="secondary" size="md">{secondaryCTA.text}</Button>
+      )}
+    </div>
+  </div>
+
+
+
+  <!-- Navigation Arrows -->
+  <button class="arrow left-arrow">&#8249;</button>
+  <button class="arrow right-arrow">&#8250;</button>
+
+  <style>
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      color: white;
+      background: #0f0f0f;
+      border-radius: 9999px;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      z-index: 20;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* shadow always visible */
+    }
+    .arrow:hover { background: rgb(57, 57, 57)}
+    .left-arrow { left: 1rem; }
+    .right-arrow { right: 1rem; }
+  </style>
+
+  <script type="module">
+    const slider = document.querySelector('#hero-slider');
+    const slides = Array.from(slider.querySelectorAll('[data-index]'));
+    let current = 0;
+    const intervalTime = Number(slider.getAttribute('data-interval')) || 5000;
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.style.opacity = i === index ? '1' : '0';
+      });
+      current = index;
+    }
+
+    let timer = setInterval(() => showSlide((current + 1) % slides.length), intervalTime);
+
+    slider.querySelector('.left-arrow').addEventListener('click', () => {
+      showSlide((current - 1 + slides.length) % slides.length);
+      resetTimer();
+    });
+
+    slider.querySelector('.right-arrow').addEventListener('click', () => {
+      showSlide((current + 1) % slides.length);
+      resetTimer();
+    });
+
+    function resetTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => showSlide((current + 1) % slides.length), intervalTime);
+    }
+  </script>
+</section>

@@ -1,58 +1,60 @@
-import PhoenixIcon from '../assets/logos/Phoenix-logo.svg?raw';
-import N8nIcon from '../assets/logos/N8n-logo.svg?raw';
-import SupabaseIcon from '../assets/logos/Supabase-logo.svg?raw';
-import PosthogIcon from '../assets/logos/posthog-logo.svg?raw';
-import PythonIcon from '../assets/logos/Python-logo.svg?raw';
-import TailwindIcon from '../assets/logos/Tailwind-logo.svg?raw';
-
-
 export const projects = [
 	{
-		title: "Workflow Automation Orchestrator (n8n)",
-		techStack: "n8n • Node.js • TypeScript • PostgreSQL",
-		description: "Event‑driven workflows for data sync, notifications, and back‑office automation. Custom nodes, secrets management, retries, and metrics.",
-		ctaText: "View Repo →",
-		ctaLink: "#",
-		icon: N8nIcon
+		title: "Agents Navigation",
+		techStack: "Unity • AI • Navigation",
+		description: "A DOTS-based navigation solution that uses NavMesh for global navigation and state-of-the-art sonar avoidance for local avoidance.",
+		assetStore: "https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233",
+		documentation: "https://lukaschod.github.io/agents-navigation-docs/manual/index.html",
+		youtube: "mvdX6vt-FJ8?si=ftfH29d32-CgyhF1",
+		tags: ["Unity", "AI", "Navigation"],
 	},
 	{
-		title: "SaaS API Starter (Auth, Billing, RBAC)",
-		techStack: "Node.js • TypeScript • PostgreSQL • Supabase • Stripe",
-		description: "Production‑ready REST/GraphQL API with JWT auth, role‑based access, Stripe subscriptions, and rate‑limited endpoints.",
-		ctaText: "Get Source < / >",
-		ctaLink: "#",
-		icon: SupabaseIcon
+		title: "Agents Navigation - Crowds",
+		techStack: "Unity • AI • Navigation",
+		description: "An extension for Agents Navigation providing an alternative global navigation solution for continuum crowds.",
+		assetStore: "https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-crowds-270598",
+		documentation: "https://lukaschod.github.io/agents-navigation-docs/manual/index.html",
+		youtube: "YXCZJYkSYPI?si=FD_rHOYi87-S7q0a",
+		tags: ["Unity", "AI", "Navigation"],
+		references: ["https://grail.cs.washington.edu/projects/crowd-flows/continuum-crowds.pdf"],
 	},
 	{
-		title: "Realtime Chat Service",
-		techStack: "Phoenix • WebSockets • Redis • Docker",
-		description: "Low‑latency chat with channels, presence, and backpressure handling. Includes load tests and horizontal scaling notes.",
-		ctaText: "Live Demo →",
-		ctaLink: "#",
-		icon: PhoenixIcon
+		title: "Animatron",
+		techStack: "Unity • Graphics • Animation",
+		description: "A DOTS-based animation system foundation. Includes features like inertialization for smooth blending between animations.",
+		assetStore: "https://assetstore.unity.com/packages/tools/animation/animatron-314750",
+		documentation: "https://lukaschod.github.io/animatron-docs/manual/index.html",
+		youtube: "AZ5n0ez9Xg0?si=QEjXWJVQsAvlmf_P",
+		tags: ["Unity", "Graphics", "Animation"],
+		references: ["https://www.gdcvault.com/play/1025331/Inertialization-High-Performance-Animation-Transitions"],
 	},
 	{
-		title: "Product Analytics Pipeline",
-		techStack: "Node.js • PostHog • PostgreSQL • ClickHouse",
-		description: "Event ingestion, batching, and replay; user properties and cohorts; dashboards for funnels, retention, and feature adoption.",
-		ctaText: "Read Case Study →",
-		ctaLink: "#",
-		icon: PosthogIcon
+		title: "Adaptive Split Screen",
+		techStack: "Unity • Graphics • Post Processing",
+		description: "A state-of-the-art split screen solution for up to 4 players. Each camera maintains a split relative to its target position, and depending on the distance from other splits, merges and splits dynamically.",
+		assetStore: "https://assetstore.unity.com/packages/tools/camera/adaptive-split-screen-223436",
+		documentation: "https://lukaschod.github.io/adaptive-split-screen-docs/manual/index.html",
+		youtube: "PryRk9LFnJs?si=yrBbautkG2csEPHe",
+		tags: ["Unity", "Graphics", "Post Processing"],
+		references: ["https://gdcvault.com/play/1023146/Math-for-Game-Programmers-Juicing"],
 	},
 	{
-		title: "Data Ingestion & ETL",
-		techStack: "Python • Airflow • PostgreSQL • S3",
-		description: "Scheduled extract/transform/load with schema migrations, data quality checks, and partitioned tables for analytics.",
-		ctaText: "View Repo →",
-		ctaLink: "#",
-		icon: PythonIcon
+		title: "Cozy Builder",
+		techStack: "Unity • Procedural",
+		description: "A tool for building procedural buildings, heavily inspired by the popular game Tiny Glade.",
+		assetStore: "https://assetstore.unity.com/packages/tools/game-toolkits/cozy-builder-304585",
+		documentation: "https://lukaschod.github.io/cozy-builder-docs/manual/index.html",
+		youtube: "l5sMX0LOj5Y?si=ODBpMV1DxTUh1VgR",
+		tags: ["Unity", "Procedural"],
 	},
 	{
-		title: "Design System",
-		techStack: "React • TypeScript • Tailwind CSS • Storybook",
-		description: "Accessible UI kit with tokens, theming, and testing. Published as a versioned package with changelogs and docs.",
-		ctaText: "Docs →",
-		ctaLink: "#",
-		icon: TailwindIcon
+		title: "Impostor Graph",
+		techStack: "Unity • Graphics • Shader",
+		description: "An LOD optimization solution that generates octahedral impostor surfaces closely matching the original to reduce vertex count on screen.",
+		assetStore: "https://assetstore.unity.com/packages/tools/utilities/impostor-graph-251230",
+		documentation: "https://lukaschod.github.io/impostor-graph-docs/manual/index.html",
+		youtube: "u829dnMzw9s?si=RITRUdzemWwH_Q5M",
+		tags: ["Unity", "Graphics", "Shaders"],
+		references: ["https://shaderbits.com/blog/octahedral-impostors"],
 	},
 ];

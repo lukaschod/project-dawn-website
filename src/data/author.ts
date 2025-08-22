@@ -1,7 +1,7 @@
-import avatar from '../assets/images/sample-avatar.jpg';
+import avatar from '../assets/images/avatar.png';
 
 export const author = {
-  name: 'Site Author',
+  name: 'Lukas Chodosevicius',
   avatar,
   url: '#',
 };

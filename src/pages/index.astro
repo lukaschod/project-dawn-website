@@ -15,6 +15,16 @@ import { logos } from '../data/logos';
 import ArrowSeparator from '../components/ui/separator/ArrowSeparator.astro'
 import GlowLineSeparator from '../components/ui/separator/GlowLineSeparator.astro'
 
+import ReviewSection from '../components/sections/ReviewSection.astro';
+import HeroSection2 from '../components/sections/HeroSection2.astro';
+import HeroSwipeSection from '../components/sections/HeroSwipeSection.astro';
+import heroBg from "../assets/images/space-marine.png?url";
+import blogHeroBG from "../assets/images/adaptive-split-screen.png?url";
+import blogHeroBG2 from "../assets/images/turbo-live.png?url";
+import blogHeroBG3 from "../assets/images/darfall.png?url";
+import blogHeroBG4 from "../assets/images/rogue-pinatas.png?url";
+import blogHeroBG5 from "../assets/images/highland-keep.png?url";
+
 // Logos
 import astroLogo from '../assets/logos/Astro-logo.svg';
 import googleAdsLogo from '../assets/logos/GoogleAds-logo.svg';
@@ -41,29 +51,41 @@ import figmaLogo from '../assets/logos/Figma-logo.svg';
         'https://www.linkedin.com/in/guilherme-hubie/',
       ],
     })} />
+
 	</head>
 	<body>
 		<Header />
-		<main>
-      <HeroSection
-        title="Your Headline Goes Here!"
-        subtitle="I build softwares that brings you loyal subscribers."
-        showCTA
-        primaryCTA={{ text: 'View Projects', href: '/project-dawn-website/portfolio' }}
-        secondaryCTA={{ text: 'Read Blog', href: '/project-dawn-website/blog' }}
-      />
-     
 
-    <section class="py-6">
-      <ArrowSeparator />
-      <SkillsSection title="Skills & Tools" skills={skills} />   
-      <ArrowSeparator />
-      <WorkExperience title="Work Experience" items={work} />
-      <ArrowSeparator />
-      <Studies title="Studies" items={studies} />
+    <HeroSwipeSection
+      title="Building High-Quality Unity Tools"
+      subtitle="Creating Unity packages for games. Each package is built to seamlessly integrate with the Unity engine, featuring a clear, well-documented architecture, leveraging the DOTS tech stack for performance, and designed for user extensibility."
+      heroBgs={[
+        blogHeroBG5,
+        blogHeroBG3,
+        blogHeroBG2,
+        blogHeroBG,
+        blogHeroBG4,
+      ]}
+      primaryCTA={{ text: 'View Projects', href: '/project-dawn-website/portfolio' }}
+      secondaryCTA={{ text: 'Discord', href: 'https://discord.gg/uZJGzN253D' }}
+      interval={5000}
+    />
+
+    <ReviewSection/>
+
+    <HeroSection2
+      heroBg={heroBg}
+      title="Providing Contract Work"
+      subtitle="I provide contract services to studios, specializing in engine development, game-related systems, and graphics API implementation. I also offer Unity consultations, sharing best practices, optimizing performance, and helping teams get the most out of the engine."
+      primaryCTA={{ text: 'Contact', href: '#contact' }}
+    />
+
+
+
+		<main>
       <GlowLineSeparator />
-    </section>
 		</main>
+
 		<Footer />
 	</body>
 </html>
