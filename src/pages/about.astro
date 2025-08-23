@@ -3,6 +3,7 @@ import Layout from '../layouts/BlogPost.astro';
 import GlowLineSeparator from '@/components/ui/separator/GlowLineSeparator.astro';
 import WorkExperience from '../components/sections/WorkExperience.astro';
 import { work } from '../data/work';
+import Button from "../components/ui/button/Button.astro";
 const pageTitle = 'About Me | Project Dawn';
 const pageDescription = 'Learn more about my background and approach to software engineering.';
 ---
@@ -17,6 +18,17 @@ const pageDescription = 'Learn more about my background and approach to software
   <p>
     I am highly skilled in multiple programming languages, including C, C++, C#, and Rust, with Rust being my personal favorite. These languages have shaped my versatility in approaching engine development, enabling me to work effectively across low-level systems, high-performance code, and user-facing tools.
   </p>
+
+<div class="mt-8 flex flex-col items-center justify-center gap-3">
+  <Button
+    href="https://www.linkedin.com/in/lukas-chodosevi%C4%8Dius-ba3575a5/"
+    variant="primary"
+    size="md"
+  >
+    More Details...
+  </Button>
+</div>
+
 
   <WorkExperience title="Work Experience" items={work} />
 
