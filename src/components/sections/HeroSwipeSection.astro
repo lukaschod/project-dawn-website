@@ -1,9 +1,14 @@
 ---
 import Button from "../ui/button/Button.astro";
 
-// HeroSection.astro
+interface HeroSlide {
+  bg: string;
+  steamCapsule?: string;
+  steamLink?: string;
+}
+
 interface HeroSectionProps {
-  heroBgs: string[];
+  slides: HeroSlide[];
   title: string;
   subtitle?: string;
   primaryCTA?: { text: string; href: string };
@@ -12,33 +17,38 @@ interface HeroSectionProps {
 }
 
 const {
-  heroBgs,
+  slides,
   title,
   subtitle,
   primaryCTA,
   secondaryCTA,
   interval = 5000,
 } = Astro.props as HeroSectionProps;
-
-// Map strings to actual imported images
-const images = heroBgs.map( async (path) => {
-  try {
-    return (await import(`../assets/images/${path}`)).default;
-  } catch {
-    console.warn(`Hero image not found: ${path}`);
-    return '';
-  }
-});
 ---
 
-<section class="relative w-full h-[70vh] overflow-hidden" id="hero-slider">
-  <!-- Background images -->
-  {heroBgs.map((bg, index) => (
+<section class="relative w-full h-[70vh] overflow-hidden" id="hero-slider" data-interval={interval}>
+  <!-- Slides -->
+  {slides.map((slide, index) => (
     <div
       class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-      style={`background-image: url("${bg}"); opacity: ${index === 0 ? 1 : 0}`}
+      style={`background-image: url("${slide.bg}"); opacity: ${index === 0 ? 1 : 0}`}
       data-index={index}
-    ></div>
+    >
+      {slide.steamCapsule && slide.steamLink && (
+        <a 
+          href={slide.steamLink} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="absolute right-20 top-1/2 -translate-y-1/2 z-20"
+        >
+          <img 
+            src={slide.steamCapsule} 
+            alt="Steam Page" 
+            class="w-48 md:w-60 lg:w-72 shadow-lg rounded transition-transform duration-200 hover:scale-105"
+          />
+        </a>
+      )}
+    </div>
   ))}
 
   <!-- Overlay -->
@@ -75,8 +85,6 @@ const images = heroBgs.map( async (path) => {
     </div>
   </div>
 
-
-
   <!-- Navigation Arrows -->
   <button class="arrow left-arrow">&#8249;</button>
   <button class="arrow right-arrow">&#8250;</button>
@@ -98,7 +106,7 @@ const images = heroBgs.map( async (path) => {
       cursor: pointer;
       transition: background-color 0.3s;
       z-index: 20;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* shadow always visible */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .arrow:hover { background: rgb(57, 57, 57)}
     .left-arrow { left: 1rem; }

@@ -1,0 +1,63 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/sections/Footer.astro';
+import Header from '../components/sections/Header.astro';
+import HeroSection2 from '../components/sections/HeroVideoSection.astro';
+
+import peklaHero from "../assets/images/pekla-hero-video.mp4?url";
+import peklaInventory from "../assets/images/pekla-inventory.png?url";
+import peklaSynergy from "../assets/images/pekla-item-synergy.png?url";
+
+---
+
+<html lang="en" data-theme="dark" class="dark">
+  <head>
+    <BaseHead title="Portfolio | Project Dawn" description="Selected projects and playbooks" />
+  </head>
+  <body>
+    <Header />
+
+    <HeroSection2
+        heroBg={peklaHero}
+        title="Pekla"
+        subtitle="A dark, gothic game that combines ARPG progression with the fast gratification of survivor games. Features a unique equipment system that enables countless synergies."
+        showCTA
+        primaryCTA={{ text: 'Steam',
+        href: 'https://store.steampowered.com/app/3505140/Pekla/' }}
+    />
+
+    <main class="space-y-32 px-6 md:px-12 lg:px-24 py-20">
+
+    <!-- Inventory Section -->
+    <section class="grid md:grid-cols-2 gap-12 items-center">
+    <div class="order-2 md:order-1">
+        <h2 class="text-3xl font-bold mb-4">A Different Kind of Inventory</h2>
+        <p class="text-lg text-gray-300">
+        An inventory no longer bound by restrictions — it’s more than storage; it’s a system. Each item’s shape, slotting, and placement unlock new strategies.
+        </p>
+    </div>
+    <div class="order-1 md:order-2">
+        <img src={peklaInventory} alt="Game Inventory" class="rounded-2xl shadow-lg" />
+    </div>
+    </section>
+
+    <!-- Synergy Section -->
+    <section class="bg-gray-900 rounded-2xl shadow-xl p-12">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+        <img src={peklaSynergy} alt="Item Synergies" class="rounded-xl shadow-md" />
+        </div>
+        <div>
+        <h2 class="text-3xl font-bold mb-4">Synergies That Matter</h2>
+        <p class="text-lg text-gray-300">
+            Every item’s placement matters as they interact with each other. Build your own combinations and uncover powerful synergies that redefine your playstyle.
+        </p>
+        </div>
+    </div>
+    </section>
+    </main>
+
+
+    <Footer />
+  </body>
+</html>

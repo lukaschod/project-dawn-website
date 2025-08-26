@@ -18,19 +18,30 @@ import GlowLineSeparator from '../components/ui/separator/GlowLineSeparator.astr
 import ReviewSection from '../components/sections/ReviewSection.astro';
 import HeroSection2 from '../components/sections/HeroSection2.astro';
 import HeroSwipeSection from '../components/sections/HeroSwipeSection.astro';
-import heroBg from "../assets/images/space-marine.png?url";
-import blogHeroBG from "../assets/images/adaptive-split-screen.png?url";
-import blogHeroBG2 from "../assets/images/turbo-live.png?url";
-import blogHeroBG3 from "../assets/images/darfall.png?url";
-import blogHeroBG4 from "../assets/images/rogue-pinatas.png?url";
-import blogHeroBG5 from "../assets/images/highland-keep.png?url";
 
-// Logos
-import astroLogo from '../assets/logos/Astro-logo.svg';
-import googleAdsLogo from '../assets/logos/GoogleAds-logo.svg';
-import posthogLogo from '../assets/logos/posthog-logo.svg';
-import notionLogo from '../assets/logos/Notion-logo.svg';
-import figmaLogo from '../assets/logos/Figma-logo.svg';
+import heroBg from "../assets/images/space-marine.png?url";
+import spaceMarineCapsule from "../assets/images/space-marine-capsule.jpg?url";
+
+import iBorrow from "../assets/images/i-borrow.png?url";
+import iBorrowCapsule from "../assets/images/i-borrow-capsule.jpg?url";
+
+import turboLive from "../assets/images/turbo-live.png?url";
+import turboLiveCapsule from "../assets/images/turbo-live-capsule.jpg?url";
+
+import darfall from "../assets/images/darfall.png?url";
+import darfallCapsule from "../assets/images/darfall-capsule.jpg?url";
+
+import roguePinatas from "../assets/images/rogue-pinatas.png?url";
+import roguePinatasCapsule from "../assets/images/rogue-pinatas-capsule.jpg?url";
+
+import highlandKeep from "../assets/images/highland-keep.png?url";
+import highlandKeepCapsule from "../assets/images/highland-keep-capsule.jpg?url";
+
+import pekla from "../assets/images/pekla.png?url";
+import peklaCapsule from "../assets/images/pekla-capsule.jpg?url";
+
+import cosmicBlastards from "../assets/images/cosmic-blastards.png?url";
+import cosmicBlastardsCapsule from "../assets/images/cosmic-blastards-capsule.jpg?url";
 
 // skills are imported from src/data/skills
 ---
@@ -59,15 +70,17 @@ import figmaLogo from '../assets/logos/Figma-logo.svg';
     <HeroSwipeSection
       title="Building High-Quality Unity Tools"
       subtitle="Creating Unity packages for games. Each package is built to seamlessly integrate with the Unity engine, featuring a clear, well-documented architecture, leveraging the DOTS tech stack for performance, and designed for user extensibility."
-      heroBgs={[
-        blogHeroBG5,
-        blogHeroBG3,
-        blogHeroBG2,
-        blogHeroBG,
-        blogHeroBG4,
+      slides={[
+        { bg: highlandKeep, steamCapsule: highlandKeepCapsule, steamLink: "https://store.steampowered.com/app/3107870/Highland_Keep/" },
+        { bg: darfall, steamCapsule: darfallCapsule, steamLink: "https://store.steampowered.com/app/1961600/Darfall/" },
+        { bg: turboLive, steamCapsule: turboLiveCapsule, steamLink: "https://store.steampowered.com/app/2994920/Turbo_Live/" },
+        { bg: pekla, steamCapsule: peklaCapsule, steamLink: "https://store.steampowered.com/app/3505140/Pekla/" },
+        { bg: iBorrow, steamCapsule: iBorrowCapsule, steamLink: "https://store.steampowered.com/app/1551020/I_Borrow/" },
+        { bg: roguePinatas, steamCapsule: roguePinatasCapsule, steamLink: "https://store.steampowered.com/app/2700990/Rogue_Piatas_VRmageddon/" },
+        { bg: cosmicBlastards, steamCapsule: cosmicBlastardsCapsule, steamLink: "https://store.steampowered.com/app/2682480/Cosmic_Blastards/" },
       ]}
-      primaryCTA={{ text: 'View Projects', href: '/project-dawn-website/portfolio' }}
-      secondaryCTA={{ text: 'Discord', href: 'https://discord.gg/uZJGzN253D' }}
+      primaryCTA={{ text: "View Projects", href: "/project-dawn-website/portfolio" }}
+      secondaryCTA={{ text: "Discord", href: "https://discord.gg/uZJGzN253D" }}
       interval={5000}
     />
 
@@ -77,7 +90,6 @@ import figmaLogo from '../assets/logos/Figma-logo.svg';
       heroBg={heroBg}
       title="Providing Contract Work"
       subtitle="I provide contract services to studios, specializing in engine development, game-related systems, and graphics API implementation. I also offer Unity consultations, sharing best practices, optimizing performance, and helping teams get the most out of the engine."
-      primaryCTA={{ text: 'Contact', href: '#contact' }}
     />
 
 

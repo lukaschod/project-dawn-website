@@ -5,8 +5,8 @@ interface Props {
   basePath?: string; // e.g. '/blog/page'
 }
 
-const { currentPage, totalPages, basePath = '/blog/page' } = Astro.props as Props;
-const prevHref = currentPage > 1 ? (currentPage === 2 ? '/blog/' : `${basePath}/${currentPage - 1}/`) : null;
+const { currentPage, totalPages, basePath = '/project-dawn-website/blog/page' } = Astro.props as Props;
+const prevHref = currentPage > 1 ? (currentPage === 2 ? '/project-dawn-website/blog/' : `${basePath}/${currentPage - 1}/`) : null;
 const nextHref = currentPage < totalPages ? `${basePath}/${currentPage + 1}/` : null;
 ---
 
