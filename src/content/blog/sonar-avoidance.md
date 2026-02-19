@@ -25,8 +25,6 @@ In this section I will cover the motivation behind the algorithm and how it evol
 
 ### Warcraft
 
-In 2014 I started working with Unity. That was when I discovered Unity as a serious tool for creating games. I quickly fell in love with it and decided to build my own RTS game.
-
 Naturally, I began developing a Warcraft III inspired mobile project.
 In 2014 I started working in Unity this is where I discovered the Unity Engine as tool for creating the games. I quickly fell in love with the tool and decided that I want to create the game with it. This then I started developing my wacraft 3 mobile knock-off.
 <div style="max-width:500px;">
