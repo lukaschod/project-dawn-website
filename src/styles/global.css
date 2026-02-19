@@ -149,3 +149,15 @@ hr {
 	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
 }
+
+/* Center block math */
+.katex-display {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.katex-display {
+  text-align: center !important;
+}

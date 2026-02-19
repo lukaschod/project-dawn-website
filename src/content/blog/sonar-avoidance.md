@@ -35,16 +35,7 @@ In 2014 I started working in Unity this is where I discovered the Unity Engine a
 
 In high-sight it was not the greatest choice to straight up copy game even, if it was idea to put it into mobile. As it would not get past neither the android store or apple store, but I had this naive hope that maybe Blizzard would get interested in project. Well that of course never happened, but believe me I tried...
 
-There was actually the reason why I chose this project. Back in my teens I was insanly invested in Warcraft 3 modding. The warcraft 3 had this tool called warcraft 3 map editor it allowed creation of what they called `Map`, which can later on be hosted in multiplayer and played by other users. Map editor was very powerful and I think to this day is probably the greatest blizzard creation, but that is a topic for another time. With map editor you could create completetly different game genres. The editor supported UI modifications, model importing, effects importing, Trigger Editor for gui based scripting and JASS (Just another scripting syntax) for text based scripting. There was multiple communities and sities with people creations. I think the one of the most popular was [HiveWorkshop](https://www.hiveworkshop.com/) where I was also spending lots of my time. Hive workshop was full of free content created from pashioned warcraft fans, everything from icons to models and maps.
-
-For those who never played Warcraft 3, this is how standard maps looked like in warcraft 3 a.k.a. `Melee` maps.
-
-![Melee Map](../../assets/images/warcraft3.png)
-
-There is few projects that I worked on personally.
-
-![Warcraft Strike](../../assets/images/warcraft-strike.png)
-![Kings RPG](../../assets/images/kings-rpg.png)
+There was actually the reason why I chose this project. Back in my teens I was insanly invested in Warcraft 3 modding. The warcraft 3 had this tool called warcraft 3 map editor it allowed creation of what they called `Map`, which can later on be hosted in multiplayer and played by other users. Map editor was very powerful and I think to this day is probably the greatest blizzard creation, but that is a topic for another time...
 
 ### Navigation Solution
 Probably one of the most important feature in RTS game is having good agent navigation solution. If it does not work that well people will get very frustrated and probably will stop playing your game. So its very important to make that part right. Probably to this day starcaft 2 navigation is considered one of the best navigation solution in rts game. It was done so well that many starcraft pros hated it as it made agent navigate to easily reducing the agent macroing element as the skill which was quite relevent in starcraft 1.
@@ -86,27 +77,288 @@ The glaring issue with flow fields in general as path calculation happens on sha
 #### Starcraft 2 Navigation
 Eventually I come back to game that in my opinion had one of the most amazing agent navigation solutions. Finding information about starcraft 2 navigation was quite a challanage as seems like blizzard was keeping it quite hidden. After experimenting with their editor and in game, I found quite quikcly that their where using the navmesh for global navigation and for local avoidnace they had their own propertery solution. The only source of information I managed to stumble was GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not). In that gdc talk blizzard very briefly covered their navigation solution more from terms of challange they had to face it, but did not really dwell into technical details. They also confirmed using navmesh as I guessed and quite nicely explained how they did rebuilding. As for navmesh it seems like they used way simplier solution compared what unity had as unity allowed baking navmesh pretty much in 3d space, where starcraft 2 solution was mainly tied to 2.5d world. For the avoidance main hint that they gave away that they had almost like vision based solution where agent would try to look some distance in front of him and look for openings to avoid collision and slip in.
 
-## Algorithm 1.0
-Idea of sonar avoidance is actually quite simple at its core. Imagine each agent has field of view, similarly like humans that has roughly ~200-220° horizontally and ~130-135° vertically.
-TODO photo
+## Algorithm
 
-Now as agents dont need to be that complex as human beings for most of the games, we can actually ignore vertical field of view and stick only to horizontal. This simplifies problem from 2d space into 1d space and we can convert our vision into simple arcing line. From algorithm side we treat this arching line as simple range. Where start is the left angle of field of view horizontally being -110° and end value being the right 110°. As you can see we have this space slightly shifted so that center is 0°, that will be important.
-TODO photo
+The idea of sonar avoidance is simple at its core. Imagine each agent has a field of view similar to humans, roughly 200–220° horizontally and 130–135° vertically.
 
-As we split this line into two ranges where first one is range (-110°:0°) and second one is range (0°:110°). Essentially having our field of view split into positive and negative sides. From mathematically point we have array of ranges:
-`V = [-110:0; 0:110]`
-TODO photo
+As in most games, we do not need full 3D perception. We ignore the vertical field of view and consider only the horizontal plane. This reduces the problem from a 2D angular space (horizontal + vertical) to a 1D angular domain.
 
-Now each obstacle is essentially acts similarly like it would block human vision, the bigger it is and closer it is the more vision it blocks. If it is outside the vision radius we ignore it. Each obstacle has position P and radius R, so the function essentially converts from agents world space into this sonar space resulitng in new range `f(Pi, Pr) -> R2`. Finally we use this obstacle line to check each `V` lines and if they overlap cut, that usually produces either removal of line, reducing in length or resulting two new lines.
-TODO photo
+We represent the horizontal field of view as an angular interval centered at the agent’s forward direction:
 
-After all obstacle included we should end up with new array of lines:
-`R = [x0; x1; ..., xn] where xi is R2`
-TODO photo
+$$
+\theta \in [\theta_{\min}, \theta_{\max}]
+$$
 
-Now resulting new array `R` each element is potential range of angles that this agent could take without colliding with obstacles. However usually each agent has some desired direction that comes either from destination or global planning. In this case we treat that agent desired direction would be at angle 0°, so with that in mind, if we find the line that is closest to it. It will be the best angle. Also as we have desired direction at 0° we dont need to look for best angle at the line itself as it always will be either start or end depending was the line on positive or negative side then we split at first. In case `R` is empty it means it is fully blocked and it can do some custom decision.
+We treat this interval as a 1D range where $\theta_{\min}$ is the left boundary, $\theta_{\max}$ is the right boundary, and $0^\circ$ is the desired forward direction.
 
-### TODO
-This should already produce nice local avoidance around static obstacle and should even able to escape some of the cases where agent is surrounded by obstacles more in concave fashion. However as agent dont store any state from its previous movement it can quite easily start bouncing back and forth. To solve this it also good in array `R` instead of selecting just closest line to center, also check for line that is close to agents currenty velocity. This could be as simple just calculating cost function `C(xi) = a * d(x1) + b *v(x1)`, where `d(x)` calculates distance to center and `v(x)` calculates distance to velocity and `a` and `b` being simple weights where `a + b = 1.0`.
+---
 
-## Algorithm 2.0
+### Splitting the Field of View
+
+For convenience, we split the interval into two subranges:
+
+$$
+V = \left\{ [\theta_{\min}, 0], \; [0, \theta_{\max}] \right\}
+$$
+
+This separates the field of view into negative (left) and positive (right) angles relative to the forward direction.
+
+---
+
+### Obstacle Projection into Sonar Space
+
+Each obstacle blocks part of the agent’s field of view. The closer and larger the obstacle, the larger the angular interval it blocks. Obstacles outside the vision radius are ignored.
+
+We define a function that transforms a static obstacle from world space into angular (sonar) space:
+
+$$
+f_{\text{static}}(\mathbf{p}_i, r_i) \rightarrow I_i
+$$
+
+The vector $\mathbf{p}_i \in \mathbb{R}^2$ is the obstacle position, $r_i$ is its radius, and $I_i \subset [\theta_{\min}, \theta_{\max}]$ is the blocked angular interval.
+
+First, we convert the obstacle position into agent local space:
+
+$$
+\tilde{\mathbf{p}}_i = R(\mathbf{p}_i - \mathbf{p}_a), 
+\qquad 
+\tilde{r}_i = r_i + r_a
+$$
+
+The vector $\mathbf{p}_a \in \mathbb{R}^2$ is the agent position, $r_a$ is the agent radius, and $R$ is the rotation aligning the desired direction with $0^\circ$.
+
+The obstacle angle and half-blocking angle are:
+
+$$
+\theta_i = \operatorname{atan2}(\tilde{p}_{i,y}, \tilde{p}_{i,x}),
+\qquad
+\varphi_i = \arcsin\left( \frac{\tilde{r}_i}{\|\tilde{\mathbf{p}}_i\|} \right)
+$$
+
+The resulting blocked interval is:
+
+$$
+f_{\text{static}}(\mathbf{p}_i, r_i) 
+=
+[\theta_i - \varphi_i, \; \theta_i + \varphi_i]
+$$
+
+---
+
+### Cutting Visible Ranges
+
+For each blocked interval $I_i$, we subtract it from the current set of visible ranges.
+
+Each subtraction may remove a range entirely, shrink a range, or split a range into two smaller ranges.
+
+After processing all obstacles, we obtain a set of valid angular intervals:
+
+$$
+R = \{ I_0, I_1, \dots, I_n \}
+$$
+
+Each interval $I_k = [\alpha_k, \beta_k]$ represents a collision-free angular range.
+
+---
+
+### Selecting the Best Direction
+
+Each interval in $R$ represents a set of safe directions.
+
+The agent typically has a desired direction $\theta_d$ coming from global path planning.  
+Since all obstacles are converted to local space, we assume:
+
+$$
+\theta_d = 0
+$$
+
+We select the interval in $R$ closest to $\theta_d$.
+
+The optimal steering angle is $0$ if it lies inside some interval. Otherwise, it is the boundary value minimizing $|\theta - \theta_d|$.
+
+If $R = \emptyset$, the agent is fully blocked and must apply a fallback strategy such as slowing down, rotating in place, or using a higher-level decision.
+
+---
+
+## Persistent State
+
+The static formulation works well for static obstacles. However, without persistent state, the agent may oscillate between directions.
+
+To mitigate this, we incorporate the current velocity direction $\theta_v$.
+
+We define a cost function:
+
+$$
+C(\theta) 
+=
+(1 - w)\, d(\theta, \theta_d) 
++
+w\, d(\theta, \theta_v)
+$$
+
+The function $d(\theta_1, \theta_2)$ denotes the minimal angular distance, and $w \in [0,1]$ controls how strongly the current velocity influences the decision.
+
+For each interval $I_k$, we evaluate boundary angles $\theta \in \{\alpha_k, \beta_k\}$ and select the one minimizing $C(\theta)$. This biases the solution toward directions consistent with the current motion and reduces oscillations.
+
+---
+
+## Dynamic Obstacles
+
+Applying the static solution to dynamic agents often produces V-shaped formations. Each agent predicts a collision even if all agents move at identical velocities and would never intersect.
+
+To handle dynamic obstacles, we account for relative velocity.
+
+We define:
+
+$$
+f_{\text{dynamic}}(\mathbf{p}_i, \mathbf{v}_i, r_i) \rightarrow I_i
+$$
+
+The vector $\mathbf{p}_i \in \mathbb{R}^2$ is the obstacle position, $\mathbf{v}_i \in \mathbb{R}^2$ is its velocity, and $r_i$ is its radius.
+
+A collision occurs if there exists $t > 0$ such that:
+
+$$
+\left|
+(\mathbf{p}_i + \mathbf{v}_i t)
+-
+(\mathbf{p}_a + \mathbf{v}_a(\theta_g) t)
+\right|
+=
+r_i + r_a
+$$
+
+The vector $\mathbf{p}_a$ is the agent position, $r_a$ is the agent radius, and $\mathbf{v}_a(\theta_g)$ is the agent velocity parameterized by steering angle $\theta_g$ with constant speed $s_a$:
+
+$$
+\mathbf{v}_a(\theta_g)
+=
+s_a
+\begin{bmatrix}
+\cos \theta_g \\
+\sin \theta_g
+\end{bmatrix}
+$$
+
+We convert everything into agent local space:
+
+$$
+\tilde{\mathbf{p}}_i = R(\mathbf{p}_i - \mathbf{p}_a),
+\qquad
+\tilde{\mathbf{v}}_i = R(\mathbf{v}_i),
+\qquad
+\tilde{r}_i = r_i + r_a
+$$
+
+The relative-motion condition becomes:
+
+$$
+\left|
+\tilde{\mathbf{p}}_i
++
+(\tilde{\mathbf{v}}_i - \mathbf{v}_a(\theta_g)) t
+\right|
+=
+\tilde{r}_i
+$$
+
+Solving this system for $t$ and $\theta_g$ determines whether a future collision occurs and which angular interval must be blocked.
+
+Agents moving in parallel at identical velocity will have zero relative velocity and therefore generate no blocking interval, preventing unnecessary avoidance.
+
+Solving this function is the most computationally expensive part of the sonar avoidance algorithm.
+
+
+---
+
+## Navmesh Integration
+
+Integrating sonar avoidance with a navmesh is straightforward.  
+The agent collects all nearby navmesh edges and constructs static line obstacles from them.
+
+We define:
+
+$$
+f_{\text{wall}}(\mathbf{p}_{i,s}, \mathbf{p}_{i,e}) \rightarrow I_i
+$$
+
+The vectors $\mathbf{p}_{i,s} \in \mathbb{R}^2$ and $\mathbf{p}_{i,e} \in \mathbb{R}^2$ denote the start and end positions of the $i$-th navmesh edge.  
+The interval $I_i \subset [\theta_{\min}, \theta_{\max}]$ represents the blocked angular range generated by that edge.
+
+As with static circular obstacles, the edge endpoints are transformed into agent local space.  
+The resulting angular interval is then subtracted from the visible range set $R$.
+
+---
+
+## Smart Stop
+
+The algorithm typically terminates when the agent is sufficiently close to its destination.  
+However, like most local avoidance algorithms, sonar avoidance does not guarantee convergence in all scenarios.
+
+Therefore, a higher-level mechanism is required to detect pathological cases and terminate early.
+
+Two simple strategies are sufficient to handle most remaining scenarios.  
+We call them **Hive Mind Stop** and **Give Up Stop**.
+
+---
+
+### Hive Mind Stop
+
+Hive Mind Stop solves termination in group movement.
+
+When multiple agents move toward the same destination, typically only one reaches it, while others may oscillate around it indefinitely.
+
+To address this, each agent that is within a small threshold distance from the destination inspects nearby dynamic obstacles.  
+If neighboring agents are already stopped, have a similar destination, and are within proximity, the agent also stops.
+
+This produces stable group termination behavior.
+
+---
+
+### Give Up Stop
+
+Give Up Stop handles situations where an agent becomes stuck in complex concave obstacle formations.
+
+Each agent maintains a progress variable:
+
+$$
+t_{\text{giveup}} \in [0, t_{\text{giveup,max}}]
+$$
+
+The variable is initialized as:
+
+$$
+t_{\text{giveup}} = 0
+$$
+
+At each update step, the agent scans nearby dynamic obstacles.
+
+If blocking conditions persist, the timer increases:
+
+$$
+t_{\text{giveup}} \leftarrow \min\left(t_{\text{giveup,max}}, \, t_{\text{giveup}} + \Delta t \right)
+$$
+
+Otherwise, it decreases:
+
+$$
+t_{\text{giveup}} \leftarrow \max\left(0, \, t_{\text{giveup}} - \Delta t \right)
+$$
+
+If
+
+$$
+t_{\text{giveup}} = t_{\text{giveup,max}}
+$$
+
+the agent terminates movement.
+
+This mechanism allows temporary congestion while preventing infinite oscillation in deadlock configurations.
+
+---
+
+## Optimization
+
+Sonar avoidance is computationally expensive, and the cost increases with the number of obstacles.
+
+Limiting evaluation to the $n$ closest obstacles provides stable computational cost with a manageable reduction in avoidance quality.

@@ -9,6 +9,8 @@ import PostMeta from '../components/ui/meta/PostMeta.astro';
 import ShareButtons from '../components/ui/share/ShareButtons.astro';
 import PostNav from '../components/ui/nav/PostNav.astro';
 
+import 'katex/dist/katex.min.css';
+
 type BlogData = CollectionEntry<'blog'>['data'];
 type Props = BlogData & { showHeader?: boolean; prevPost?: { id: string; title: string } | null; nextPost?: { id: string; title: string } | null; readingTimeMin?: number };
 
@@ -71,7 +73,7 @@ const { title, description, pubDate, updatedDate, heroImage, showHeader = true, 
 			}
 				.prose {
 					width: 100%;
-					max-width: 870px; /* widen column */
+					max-width: 1280px; /* widen column */
 					margin: auto;
 					padding: 0.05em;
 					color: var(--color-text-secondary);
