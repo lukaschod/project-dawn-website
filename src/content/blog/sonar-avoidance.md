@@ -1,25 +1,33 @@
 ---
-title: 'Sonar Avoidance - Creating my agents avoidance algorithm'
-description: 'Sample article demonstrating the blog layout, cards, and meta.'
-pubDate: 'Aug 12 2025'
-heroImage: '../../assets/images/example-blog-hero1.jpg'
-category: 'Showcase'
+title: 'Sonar Avoidance'
+description: 'Vision-inspired local avoidance algorithm for RTS agents that projects nearby obstacles into angular space and selects collision-free steering directions in real time. By reducing avoidance to a 1D angular domain, it achieves fluid group movement while preserving precise and responsive unit control.'
+pubDate: 'Feb 19 2026'
+heroImage: '../../assets/images/agents-navigation.png'
+category: 'Game AI'
 tags: ['ai', 'navigation']
 ---
 
 # Sonar Avoidance
 
-Sonar avoidance is state of the art agents local avoidance algorithm that I created for my RTS game. It is heavily inspired by Starcraft 2 and by GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not). As the talk did not really went into any algorithmic details and only presenting surface level concept, I consider this algorithm fully my own. However I would not be suprised that somebody else also created something similar at some point under different name. In this blog I will cover the history how I come up this algorithm and will explain in details how it functions.
+Sonar Avoidance is a local avoidance algorithm for RTS agents that I created for my own game. It is heavily inspired by StarCraft II and the GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not). Since the talk did not go into algorithmic details and only presented high-level concepts, I consider this implementation fully my own. However, I would not be surprised if someone else independently created something similar under a different name.
 
-For those who interested the sonar avoidance is implementation. It is available in Unity Engine and can be bought in asset store as standalone algorithm [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) and full integration with unity navmesh in [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233).
-Since 2022 these packages where downloaded ~23k times and succesfully released in many games. Maybe numbers dont sounds that staggering big, but dont forget these are not end users that downloaded, but developers that use to create their games. For this reason I consider it big success and main reason of writing this blog article sharing a bit insights about sonar avoidance algorithm.
+In this article, I will cover the history of how I came up with the algorithm and explain in detail how it works.
 
-## History Of Algorithm
+For those interested, Sonar Avoidance is available in Unity. It can be purchased as a standalone local avoidance system under [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) or with full NavMesh integration under [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233). Since 2022, these packages have been downloaded approximately 23,000 times and successfully released in many games. While that number may not sound enormous, these are developers using the system in their own projects, not end users. For that reason, I consider it a significant success and one of the main motivations behind writing this article and sharing insights about the algorithm.
 
-In this section I am going to cover a bit the motivation and how I come with the algorithm. If you more interested in technical details, I recommend skipping this section as you probably wont find it interested.
+---
+
+## History of the Algorithm
+
+In this section I will cover the motivation behind the algorithm and how it evolved. If you are mainly interested in technical details, you can skip this section.
+
+---
 
 ### Warcraft
 
+In 2014 I started working with Unity. That was when I discovered Unity as a serious tool for creating games. I quickly fell in love with it and decided to build my own RTS game.
+
+Naturally, I began developing a Warcraft III inspired mobile project.
 In 2014 I started working in Unity this is where I discovered the Unity Engine as tool for creating the games. I quickly fell in love with the tool and decided that I want to create the game with it. This then I started developing my wacraft 3 mobile knock-off.
 <div style="max-width:500px;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
@@ -33,49 +41,107 @@ In 2014 I started working in Unity this is where I discovered the Unity Engine a
   </div>
 </div>
 
-In high-sight it was not the greatest choice to straight up copy game even, if it was idea to put it into mobile. As it would not get past neither the android store or apple store, but I had this naive hope that maybe Blizzard would get interested in project. Well that of course never happened, but believe me I tried...
+Looking back, directly copying Warcraft III, even for mobile, was not the best idea. It would not have passed Google Play or the App Store. At the time, however, I had the naive hope that Blizzard might become interested in the project. That never happened, but I did try.
 
-There was actually the reason why I chose this project. Back in my teens I was insanly invested in Warcraft 3 modding. The warcraft 3 had this tool called warcraft 3 map editor it allowed creation of what they called `Map`, which can later on be hosted in multiplayer and played by other users. Map editor was very powerful and I think to this day is probably the greatest blizzard creation, but that is a topic for another time...
+The reason I chose this project goes back even further. In my teenage years I was deeply invested in Warcraft III modding. Warcraft III had a tool called the World Editor, which allowed creation of what were called maps. These maps could later be hosted in multiplayer and played by others. The editor was extremely powerful and, in my opinion, one of Blizzard’s greatest creations.
 
-### Navigation Solution
-Probably one of the most important feature in RTS game is having good agent navigation solution. If it does not work that well people will get very frustrated and probably will stop playing your game. So its very important to make that part right. Probably to this day starcaft 2 navigation is considered one of the best navigation solution in rts game. It was done so well that many starcraft pros hated it as it made agent navigate to easily reducing the agent macroing element as the skill which was quite relevent in starcraft 1.
+---
+
+## Navigation Solution
+
+One of the most important features of any RTS game is agent navigation. If it does not feel right, players quickly become frustrated.
+
+---
 
 ### Unity Navigation
-As I was creating my game with unity engine I firstly tried their builtin solution. It was combination of two solution for global navigation using navigation mesh and for local avoidance [ORCA](https://gamma.cs.unc.edu/ORCA/).
 
-[Navigation Mesh or navmesh](https://en.wikipedia.org/wiki/Navigation_mesh) is simply put triangulated mesh of your game world, where none of the mesh edges intersect your game obstacles. Building navmesh is quite expensive, but it has way fewer nodes compared to grid based solutions. For path finding path it simply runs [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) using the start and end node.
+Since I was building the game in Unity, I initially used their built-in solution. It consisted of global navigation using a navigation mesh and local avoidance using [ORCA](https://gamma.cs.unc.edu/ORCA/).
 
-However as navmesh is quite expensive to rebuild it is only used for static obstacles like buildings, but agents that constantly stopping and moving is not used. This is where it comes the local avoidance solution called [ORCA](https://gamma.cs.unc.edu/ORCA/). This algorithm is extended version of RVO that designed to more accurate avoidance then there are multiple agents. In many games this algorithm is perfect, it produces really nice avoidance in bigger groups, somewhat very similar to crowds. However in indivual agent motion algorithm starts to show some cracks.
+A [Navigation Mesh or navmesh](https://en.wikipedia.org/wiki/Navigation_mesh) is a triangulated representation of walkable areas in the game world. Obstacles are excluded from the mesh. Pathfinding is typically performed using the [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) between start and destination nodes.
 
-One of the main undesired behaviour I noticed quite immediately was in typical RTS scenarios where you have groups of agents trying to surround the target. With orca agents would start to just clump on one side of the agent instead of trying to surround it. Where in games likes warcraft 3 where each agent is very essential that would not be acceptable as many agants would simply stand instead of attacking.
-TODO video
+NavMesh generation is expensive, but it produces far fewer nodes than grid-based systems. Because rebuilding is costly, it is generally used only for static obstacles such as buildings.
 
-The next issue with ORCA I noticed that algorithm quite heavily relied on varrying velocities of agents. Which makese a lot of sense in crowd simulations and there is lots of nice papers going in details how density based velocities performs increadibly well in high congestion scenarios. However in game cases where high congestion scenarios less frequent and you have huge groups just moving to some objective it very quikcly becomes a drawback. As your agants no longer maximize they speed. As for example, if you moving just one agent around another agents either them moving or not, you dont want it to slow down in sake of other agents as you prioritize it.
-TODO video
+For dynamic avoidance between moving agents, Unity used [ORCA](https://gamma.cs.unc.edu/ORCA/). ORCA is an extension of RVO designed to provide more accurate multi-agent avoidance.
 
-The last thing I found very inconvient with orca that it really struggled to escape cases where agents would form concave walls. So agent moving into these scenarios would straight up end up stuck.
-TODO video
+In many scenarios, ORCA works very well. It produces convincing crowd behavior and handles dense group motion nicely. However, in RTS-style gameplay, several issues became apparent.
 
-After seeing this issue I realised that navmesh+orca was not going to cut for me as navigation solution for my game. I started reaserching the alternatives. At least back then around 2016 it was really hard to find any information about the other succesful rts game navigation solutions, information was very sparse and kept at minimum. My guess was that a lot of success around rts games was how well their agents able to navigate and componies treated them as secret to avoid competition. But that is just my guess, yours good as mine.
+---
 
-#### Warcraft 3 Navigation
-Obvious first research point was the warcraft navigation as I was recreating the warcraft that was kinda non brainer. What I found from my investigation that warcraft was using grid based solution for both global navigation and local avoidance.
+### Problems with ORCA
 
-For those who dont know the grid based navigation. It is essentially splitting your game world into 2d node graph where each node is fixed size quad. Where node indicates, if it is traversable or not. Usually if there is some obstacle it will indicate that node as non traversable. Then each agent knowing its start and destination node simply run [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) to quikcly find shortest node subset that will need to traverse in order to reach destination without stepping on blocked nodes.
+The first major issue appeared in classic RTS situations where units try to surround a target.
 
-In warcraft 3 you rarely have more than 20-30 agents this is usually capped by food resource in the game. However for those who used map editor and tried maps with this limitation removed, you quickly notice how poorly this navigation solution performance in groups of 100 and more. Agents start to stop, block each other, jitter and it lots of comes that local avoidance being combined with global navigation in discrete space. It simply lacks fluid motion that you can see in starcraft 2. Even though I was recreating warcraft 3 in agents I wanted to make it better, so for this reason I decided not to go with same solution as my predecessor.
+With ORCA, agents often clumped on one side instead of properly surrounding the target. In games like Warcraft III, where each unit is important, this is unacceptable because some units would simply stand idle instead of attacking.
 
-#### Supreme Commander 2 Navigation
-In my eyes starcraft 2 was on the top of being pathfinding department. However there was one more game that equally amazed me even more was Supreme Commander 2.
-The navigation of crowds in that game was on another level. Where two huge groups would traverse each other almost like fluid.
-TODO supreme command 2
+The second issue was ORCA’s reliance on velocity modulation. This makes sense in crowd simulations, and there are many papers explaining how density-based velocity adjustment performs well in high congestion scenarios.
 
-After investigation I found they where using modified solution of [Continuum Crowds](https://grail.cs.washington.edu/projects/crowd-flows/continuum-crowds.pdf). It is another grid based graph node solution, but uses [flow fields](https://en.wikipedia.org/wiki/Flow_(mathematics)). Traditionally you would have agent individually calculating its path from start to end node, where with flow field each node acts as start node and its velocity guides to shared end node(s). You can imagine flow field as ocean and the end goal as vortex, regardless where you put ure agent in ocean it will get guided towards the vortex. So continuum crowds is esentially flow field solution, but it takes into account information like density of agents in place, how fast agents are moving in place, thus archieving very fluid motion.
+However, in RTS games, high congestion is less frequent and large groups often move toward objectives. In such cases, reducing velocity becomes a drawback because units no longer maximize their speed. If you are micro-managing a single unit, you do not want it to slow down unnecessarily just to accommodate nearby agents.
 
-The glaring issue with flow fields in general as path calculation happens on shared goal accross whole graph. Which makes it extremely afficient in huge groups that share same goal, but very inefficient in cases where there is a lot of agents with invididual goals or even with maps that are very huge. Of course there are modifications that one way or another way leviate the cost in these scenarios, but does solve them completely. So the game has to be designed around this limitations as that can be seen in supreme commander 2 that mostly groups are controlled and there are not worker agents. Where in warcraft 3 you have a lot of agents moving individually like workers, hero, neutral monsters and so on.
+The third issue was ORCA’s difficulty escaping concave formations. Agents entering these situations could become permanently stuck.
 
-#### Starcraft 2 Navigation
-Eventually I come back to game that in my opinion had one of the most amazing agent navigation solutions. Finding information about starcraft 2 navigation was quite a challanage as seems like blizzard was keeping it quite hidden. After experimenting with their editor and in game, I found quite quikcly that their where using the navmesh for global navigation and for local avoidnace they had their own propertery solution. The only source of information I managed to stumble was GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not). In that gdc talk blizzard very briefly covered their navigation solution more from terms of challange they had to face it, but did not really dwell into technical details. They also confirmed using navmesh as I guessed and quite nicely explained how they did rebuilding. As for navmesh it seems like they used way simplier solution compared what unity had as unity allowed baking navmesh pretty much in 3d space, where starcraft 2 solution was mainly tied to 2.5d world. For the avoidance main hint that they gave away that they had almost like vision based solution where agent would try to look some distance in front of him and look for openings to avoid collision and slip in.
+After encountering these problems, I concluded that NavMesh combined with ORCA would not be sufficient for my game.
+
+---
+
+## Researching Alternatives
+
+Around 2016 it was surprisingly difficult to find detailed information about navigation systems used in successful RTS games. Most information was sparse and surface level.
+
+My assumption was that navigation quality plays a major role in RTS success, so companies treated their solutions as proprietary. That may or may not be true, but public technical information was limited.
+
+---
+
+### Warcraft III Navigation
+
+The obvious first reference was Warcraft III.
+
+From my investigation, Warcraft III used a grid-based solution for both global navigation and local avoidance.
+
+In grid-based navigation, the world is divided into fixed-size nodes. Each node indicates whether it is traversable. Agents run [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) to find a sequence of nodes connecting start and destination.
+
+In Warcraft III, army sizes were usually limited by resource caps. However, when those limits were removed using the editor, performance degraded significantly. Groups of 100 or more units began blocking each other, jittering, and behaving poorly.
+
+The main limitation was the discrete nature of the system. It lacked the fluid motion seen in StarCraft II.
+
+Although I was recreating Warcraft III style gameplay, I wanted better navigation quality, so I decided against using a purely grid-based approach.
+
+---
+
+### Supreme Commander 2 Navigation
+
+Another game that impressed me even more in terms of large-scale movement was Supreme Commander 2.
+
+Large armies could pass through each other with very fluid motion.
+
+From research I found they were using a modified version of [Continuum Crowds](https://grail.cs.washington.edu/projects/crowd-flows/continuum-crowds.pdf). It is a grid-based approach that uses [flow fields](https://en.wikipedia.org/wiki/Flow_(mathematics)).
+
+In a flow field, each grid node stores a direction guiding agents toward a shared goal. Instead of each agent computing an individual path, the environment provides a velocity field.
+
+You can imagine the field as an ocean and the goal as a vortex. No matter where you place the agent, it flows toward the destination.
+
+Continuum Crowds incorporates density and velocity information to produce highly fluid group motion.
+
+The main limitation of flow fields is that path calculation happens for shared goals across the whole graph. This makes them extremely efficient for large groups with the same objective, but inefficient when many agents have different goals or when maps are very large.
+
+Supreme Commander 2 was clearly designed around this limitation. Large groups share goals and there are fewer individually controlled units. In Warcraft-style games you have many independent agents such as workers, heroes, and neutral units.
+
+---
+
+### StarCraft II Navigation
+
+Eventually I returned to StarCraft II. To this day, StarCraft II is widely considered one of the best navigation implementations in RTS games. It was done so well that some professional players disliked it because it reduced the mechanical difficulty of unit control that was very relevant in StarCraft I.
+
+Finding reliable information about its navigation system was challenging. Blizzard kept technical details minimal.
+
+Through experimentation and observation, I concluded that StarCraft II used NavMesh for global navigation and a proprietary local avoidance solution.
+
+The only meaningful public source I found was the GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not).
+
+The talk focused more on design challenges than technical implementation. They confirmed NavMesh usage and explained how they handled rebuilding efficiently. Their solution appeared simpler and more 2.5D-focused compared to Unity’s more general 3D NavMesh.
+
+The key hint about avoidance was that it behaved almost like a vision-based system. Agents seemed to look ahead, detect openings, and steer through available gaps.
+
+That observation became the foundation of what later evolved into Sonar Avoidance.
 
 ## Algorithm
 

@@ -21,7 +21,9 @@ export default defineConfig({
   },
 
   markdown: {
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [
+      [remarkMath, { singleDollarTextMath: true }]
+    ],
     rehypePlugins: [rehypeMathjax],
   },
 });

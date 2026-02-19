@@ -150,14 +150,20 @@ hr {
 	white-space: nowrap;
 }
 
-/* Center block math */
-.katex-display {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-  margin: 1.5rem 0;
+/* Inline math */
+mjx-container[jax="SVG"]:not([display="true"]) {
+  display: inline-flex;
+  align-items: center;
 }
 
-.katex-display {
-  text-align: center !important;
+/* Block math */
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+/* SVG fix */
+mjx-container[jax="SVG"] svg {
+  display: inline-block;
 }
