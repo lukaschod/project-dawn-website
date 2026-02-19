@@ -8,6 +8,7 @@ import Header from '../components/sections/Header.astro';
 import PostMeta from '../components/ui/meta/PostMeta.astro';
 import ShareButtons from '../components/ui/share/ShareButtons.astro';
 import PostNav from '../components/ui/nav/PostNav.astro';
+import Comments from '../components/Comments.astro';
 
 import 'katex/dist/katex.min.css';
 
@@ -128,6 +129,7 @@ const { title, description, pubDate, updatedDate, heroImage, showHeader = true, 
 					<PostMeta pubDate={pubDate} readingTimeMin={readingTimeMin} authorName={Astro.props.author || 'Lukas Chodosevicius'} />
                     <slot />
                     <PostNav prev={prevPost} next={nextPost} />
+					<Comments />
                 </div>
 			</article>
 		</main>
