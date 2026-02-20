@@ -167,3 +167,25 @@ mjx-container[jax="SVG"][display="true"] {
 mjx-container[jax="SVG"] svg {
   display: inline-block;
 }
+
+.prose {
+  counter-reset: h2counter;
+}
+
+.prose h2 {
+  counter-reset: h3counter;
+  counter-increment: h2counter;
+}
+
+.prose h2::before {
+  content: counter(h2counter) ". ";
+  font-weight: 600;
+}
+
+.prose h3 {
+  counter-increment: h3counter;
+}
+
+.prose h3::before {
+  content: counter(h2counter) "." counter(h3counter) " ";
+}

@@ -25,7 +25,6 @@ In this section I will cover the motivation behind the algorithm and how it evol
 
 ### Warcraft
 
-Naturally, I began developing a Warcraft III inspired mobile project.
 In 2014 I started working in Unity this is where I discovered the Unity Engine as tool for creating the games. I quickly fell in love with the tool and decided that I want to create the game with it. This then I started developing my wacraft 3 mobile knock-off.
 <div style="max-width:500px;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
@@ -167,6 +166,13 @@ $$
 
 This separates the field of view into negative (left) and positive (right) angles relative to the forward direction.
 
+<p align="center">
+  <img src="/project-dawn-website/images/sonar-vision.png" width="600" />
+  <em>
+    Figure 1: The yellow circle represents the agent, and the two green sections represent the sonar detection volume.
+  </em>
+</p>
+
 ---
 
 ### Obstacle Projection into Sonar Space
@@ -206,6 +212,14 @@ f_{\text{static}}(\mathbf{p}_i, r_i)
 =
 [\theta_i - \varphi_i, \; \theta_i + \varphi_i]
 $$
+
+<p align="center">
+  <img src="/project-dawn-website/images/sonar-static-obstacle.png" width="600" />
+  <em>
+    Figure 2: The red circle represents the obstacle, and the orange circles indicate where the agent would collide if it moved in directions toward the obstacle.
+  </em>
+</p>
+
 
 ---
 
@@ -331,6 +345,13 @@ Solving this system for $t$ and $\theta_g$ determines whether a future collision
 Agents moving in parallel at identical velocity will have zero relative velocity and therefore generate no blocking interval, preventing unnecessary avoidance.
 
 Solving this function is the most computationally expensive part of the sonar avoidance algorithm.
+
+<p align="center">
+  <img src="/project-dawn-website/images/sonar-dynamic-obstacle.png" width="600" />
+  <em>
+    Figure 2: The obstacle is moving downward at a speed of 2, and the agent is moving to the right at a speed of 1. The red circles show how the algorithm predicts all possible collision angles. It chooses to move toward the obstacle’s current position because, by the time the agent reaches it, the obstacle will have already moved away.
+  </em>
+</p>
 
 
 ---
