@@ -1,5 +1,5 @@
 ---
-title: 'Sonar Avoidance'
+title: 'Sonar Avoidance: An Alternative to Traditional RVO'
 description: 'Vision-inspired local avoidance algorithm for RTS agents that projects nearby obstacles into angular space and selects collision-free steering directions in real time. By reducing avoidance to a 1D angular domain, it achieves fluid group movement while preserving precise and responsive unit control.'
 pubDate: 'Feb 19 2026'
 heroImage: '../../assets/images/agents-navigation.png'
@@ -47,6 +47,10 @@ The reason I chose this project goes back even further. In my teenage years I wa
 ## Navigation Solution
 
 One of the most important features of any RTS game is agent navigation. If it does not feel right, players quickly become frustrated.
+
+In RTS games, movement is a core gameplay mechanic, not just a way to travel between points. Units are constantly redirected, split, grouped, and micro-managed under pressure. If they get stuck, jitter, block each other, or take visibly poor paths, the game feels unreliable and unresponsive.
+
+Good navigation becomes invisible. Units flow naturally around obstacles, surround targets efficiently, and execute commands precisely. For this reason, navigation is not just a technical system but a fundamental part of game feel and competitive integrity.
 
 ---
 
@@ -447,9 +451,3 @@ This mechanism allows temporary congestion while preventing infinite oscillation
 Sonar avoidance is computationally expensive, and the cost increases with the number of obstacles.
 
 Limiting evaluation to the $n$ closest obstacles provides stable computational cost with a manageable reduction in avoidance quality.
-
-<div style="width:50%; margin: 3rem auto 0 auto;">
-
-**Acknowledgments**
-The author would like to thank Mantas Puida for reviewing this article and providing valuable feedback.
-</div>
