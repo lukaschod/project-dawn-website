@@ -294,14 +294,14 @@ $$
 
 The vector $\mathbf{p}_i \in \mathbb{R}^2$ is the obstacle position, $\mathbf{v}_i \in \mathbb{R}^2$ is its velocity, and $r_i$ is its radius.
 
-A collision occurs if there exists $t > 0$ such that:
+A collision occurs if there exists $\exists\, t > 0, t \in \mathbb{R}, t < \infty$ such that:
 
 $$
-\left|
+\left\|
 (\mathbf{p}_i + \mathbf{v}_i t)
 -
 (\mathbf{p}_a + \mathbf{v}_a(\theta_g) t)
-\right|
+\right\|
 =
 r_i + r_a
 $$
@@ -447,3 +447,9 @@ This mechanism allows temporary congestion while preventing infinite oscillation
 Sonar avoidance is computationally expensive, and the cost increases with the number of obstacles.
 
 Limiting evaluation to the $n$ closest obstacles provides stable computational cost with a manageable reduction in avoidance quality.
+
+<div style="width:50%; margin: 3rem auto 0 auto;">
+
+**Acknowledgments**
+The author would like to thank Mantas Puida for reviewing this article and providing valuable feedback.
+</div>
