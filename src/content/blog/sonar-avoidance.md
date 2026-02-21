@@ -353,7 +353,7 @@ Solving this function is the most computationally expensive part of the sonar av
 <p align="center">
   <img src="/project-dawn-website/images/sonar-dynamic-obstacle.png" width="600" />
   <em>
-    Figure 2: The obstacle is moving downward at a speed of 2, and the agent is moving to the right at a speed of 1. The red circles show how the algorithm predicts all possible collision angles. It chooses to move toward the obstacle’s current position because, by the time the agent reaches it, the obstacle will have already moved away.
+    Figure 3: The obstacle is moving downward at a speed of 2, and the agent is moving to the right at a speed of 1. The red circles show how the algorithm predicts all possible collision angles. It chooses to move toward the obstacle’s current position because, by the time the agent reaches it, the obstacle will have already moved away.
   </em>
 </p>
 
@@ -451,3 +451,67 @@ This mechanism allows temporary congestion while preventing infinite oscillation
 Sonar avoidance is computationally expensive, and the cost increases with the number of obstacles.
 
 Limiting evaluation to the $n$ closest obstacles provides stable computational cost with a manageable reduction in avoidance quality.
+
+---
+
+## Results
+
+Here we compare Sonar Avoidance to Unity’s ORCA implementation in several common RTS scenarios.
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-circle.mp4" type="video/mp4" />
+  </video>
+
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/rvo-circle.mp4" type="video/mp4" />
+  </video>
+</div>
+
+<p align="center">
+  <em>
+    Figure 4: Circling scenario. Yellow agents use Sonar Avoidance to surround the red obstacle and quickly distribute themselves by searching for available openings. The last agent continues circling because no space remains. Blue agents use Unity ORCA and immediately clump on one side of the obstacle instead of attempting a full surround. In both variations, the destination is offset by the combined radii of the agent and the target, and agents stop upon reaching it.
+  </em>
+</p>
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-jail.mp4" type="video/mp4" />
+  </video>
+
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/rvo-jail.mp4" type="video/mp4" />
+  </video>
+</div>
+
+<p align="center">
+  <em>
+    Figure 5: Concave blockage scenario. The yellow agent uses Sonar Avoidance and attempts to escape the concave trap. Once its visibility volume reaches the obstacle boundaries, it identifies a valid opening and exits through the left side. The blue agent using Unity ORCA stops near the center of the blockage and fails to escape.
+  </em>
+</p>
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-group.mp4" type="video/mp4" />
+  </video>
+
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/rvo-group.mp4" type="video/mp4" />
+  </video>
+</div>
+
+<p align="center">
+  <em>
+    Figure 6: Group exchange scenario. Yellow and green agents use Sonar Avoidance to reach their opposite destinations. Because each agent’s vision is blocked by the entire opposing group, they treat the group as a single large obstacle and flow around it cohesively. Blue agents using Unity ORCA attempt individual pairwise exchanges, resulting in less coordinated movement.
+  </em>
+</p>
+
+---
+
+### Sonar Disadvantages
+
+It is important to note that Sonar Avoidance has its own limitations.
+
+First, because the algorithm relies on angular visibility, once the field of view becomes fully blocked there is very little information left for decision making. This situation is common in extremely dense groups of agents.
+
+Second, dynamic obstacle avoidance does not explicitly account for acceleration. The model assumes that an agent can change velocity direction relatively quickly. While this assumption works well for most RTS-style units, it can break down for agents with low acceleration or heavy inertia.

@@ -5,6 +5,8 @@ import FormattedDate from '../../FormattedDate.astro';
 import { calculateReadingTimeFromMarkdown } from '../../../lib/reading';
 import { slugifyTag as slugify } from '../../../lib/slug';
 
+console.log("Layout executed");
+
 interface Props { post: CollectionEntry<'blog'> }
 const { post } = Astro.props as Props;
 // Estimate reading time from raw body (Markdown/MDX)
@@ -13,7 +15,11 @@ try {
   // @ts-ignore - body may not exist until rendered; fallback to data.description
   const md = (post as any).body ?? '';
   readingTimeMin = calculateReadingTimeFromMarkdown(md || post.data.description || '');
-} catch {}
+  console.log("Reading", post.data.title, readingTimeMin);
+
+} catch (e) {
+  console.error("Reading time error:", e);
+}
 ---
 
 <article class="card-surface p-4 h-full flex flex-col gap-3 relative">
