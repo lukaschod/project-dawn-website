@@ -428,7 +428,7 @@ $$
 \theta_e = \text{atan2}(y_e, x_e)
 $$
 
-The span between them (expanded by agent radius) becomes a blocked interval.
+The span between them becomes a blocked interval.
 
 <p align="center">
   <img src="/project-dawn-website/images/sonar-wall.png" width="600" />
