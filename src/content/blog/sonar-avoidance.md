@@ -146,29 +146,87 @@ That observation became the foundation of what later evolved into Sonar Avoidanc
 
 ## Algorithm
 
-The idea of sonar avoidance is simple at its core. Imagine each agent has a field of view similar to humans, roughly 200–220° horizontally and 130–135° vertically.
+### Analogy to Human Vision
 
-As in most games, we do not need full 3D perception. We ignore the vertical field of view and consider only the horizontal plane. This reduces the problem from a 2D angular space (horizontal + vertical) to a 1D angular domain.
+The Sonar Avoidance Algorithm can be understood through a simple human analogy. When people walk forward, they perceive the world as a forward-facing field of view centered around where they are looking. Static obstacles visually occupy a portion of that field. If something appears slightly to the left or right, we instinctively avoid walking into the angular region it occupies. In other words, obstacles “block” parts of our visual space, and we naturally choose a direction outside those blocked angles.
 
-We represent the horizontal field of view as an angular interval centered at the agent’s forward direction:
+For moving obstacles, humans go one step further. We do not react only to where someone is, but also to where they are going. Subconsciously, we predict whether our current walking direction would intersect with their future path. If it would, we slightly adjust our heading so the projected trajectories no longer collide.
 
-$$
-\theta \in [\theta_{\min}, \theta_{\max}]
-$$
+The algorithm mirrors this behavior mathematically. It treats perception as an angular field centered at $0$, converts obstacles into blocked angular intervals, and for dynamic objects evaluates whether a candidate steering angle $\theta$ would produce a future collision. Safe angles remain available, and the agent selects the one closest to its intended direction. In this way, the method reflects how humans visually perceive space, mentally eliminate unsafe directions, and choose a clear path forward.
 
-We treat this interval as a 1D range where $\theta_{\min}$ is the left boundary, $\theta_{\max}$ is the right boundary, and $0^\circ$ is the desired forward direction.
+### Overview
+
+The **Sonar Avoidance Algorithm** is a 1D angular-space local avoidance method.  
+Instead of solving constraints directly in velocity space, the algorithm projects obstacles into angular intervals and subtracts blocked regions from the agent’s field of view.
+
+The result is a set of safe steering angles from which the optimal direction is selected.
 
 ---
 
-### Splitting the Field of View
+### High-Level Pseudocode
 
-For convenience, we split the interval into two subranges:
+```text
+function ComputeSteering(agent):
+
+    desiredDir = GetDesiredDirectionFromNavMesh(agent)
+    Θ = [ [-θ_max, 0], [0, θ_max] ]   // two initial vision intervals
+
+    obstacles = CollectObstaclesWithinHorizon(agent)
+
+    blockedIntervals = []
+
+    for each staticObstacle:
+        interval = BuildStaticInterval(agent, staticObstacle, desiredDir)
+        blockedIntervals.add(interval)
+
+    for each dynamicObstacle:
+        interval = BuildDynamicInterval(agent, dynamicObstacle, desiredDir)
+        blockedIntervals.add(interval)
+
+    for each wallSegment:
+        interval = BuildWallInterval(agent, wallSegment, desiredDir)
+        blockedIntervals.add(interval)
+
+    safeIntervals = SubtractIntervals(Θ, blockedIntervals)
+
+    θ* = ArgMinCost(safeIntervals, desiredAngle=0, velocityAngle)
+
+    return DirectionFromAngle(θ*)
+```
+
+---
+
+### Agent Model
+
+Each agent is defined as:
+
+- Position: $p_a \in \mathbb{R}^3$
+- Velocity: $v_a \in \mathbb{R}^3$
+- Radius: $r_a$
+- Horizon: $H$
+- Preferred speed: $s_a$
+
+From global navigation, the agent receives a desired direction:
 
 $$
-V = \left\{ [\theta_{\min}, 0], \; [0, \theta_{\max}] \right\}
+d \in \mathbb{R}^3, \quad \|d\| = 1
 $$
 
-This separates the field of view into negative (left) and positive (right) angles relative to the forward direction.
+---
+
+### Angular Space Representation
+
+The angular domain is represented as **two separate intervals**:
+
+$$
+\Theta = \{ [-\theta_{max}, 0], \; [0, \theta_{max}] \}
+$$
+
+Where:
+
+- $0$ corresponds to desired direction.
+- Negative angles represent left.
+- Positive angles represent right.
 
 <p align="center">
   <img src="/project-dawn-website/images/sonar-vision.png" width="600" />
@@ -179,42 +237,72 @@ This separates the field of view into negative (left) and positive (right) angle
 
 ---
 
-### Obstacle Projection into Sonar Space
+### Local Space Transformation
 
-Each obstacle blocks part of the agent’s field of view. The closer and larger the obstacle, the larger the angular interval it blocks. Obstacles outside the vision radius are ignored.
+All computations are performed in local space where:
 
-We define a function that transforms a static obstacle from world space into angular (sonar) space:
+- Agent is at origin.
+- Desired direction aligns with x-axis.
 
-$$
-f_{\text{static}}(\mathbf{p}_i, r_i) \rightarrow I_i
-$$
-
-The vector $\mathbf{p}_i \in \mathbb{R}^2$ is the obstacle position, $r_i$ is its radius, and $I_i \subset [\theta_{\min}, \theta_{\max}]$ is the blocked angular interval.
-
-First, we convert the obstacle position into agent local space:
+For any world-space point $p$, local transformation is:
 
 $$
-\tilde{\mathbf{p}}_i = R(\mathbf{p}_i - \mathbf{p}_a), 
-\qquad 
-\tilde{r}_i = r_i + r_a
+p' = R^{-1}(p - p_a)
 $$
 
-The vector $\mathbf{p}_a \in \mathbb{R}^2$ is the agent position, $r_a$ is the agent radius, and $R$ is the rotation aligning the desired direction with $0^\circ$.
-
-The obstacle angle and half-blocking angle are:
+Such that:
 
 $$
-\theta_i = \operatorname{atan2}(\tilde{p}_{i,y}, \tilde{p}_{i,x}),
-\qquad
-\varphi_i = \arcsin\left( \frac{\tilde{r}_i}{\|\tilde{\mathbf{p}}_i\|} \right)
+d' = (1,0,0)
 $$
 
-The resulting blocked interval is:
+---
+
+### Static Obstacles
+
+Static obstacle:
+
+- Position: $p_o \in \mathbb{R}^3$
+- Radius: $r_o$
+
+After transforming to local space:
 
 $$
-f_{\text{static}}(\mathbf{p}_i, r_i) 
-=
-[\theta_i - \varphi_i, \; \theta_i + \varphi_i]
+p_o' = (x, y)
+$$
+
+Let:
+
+$$
+r = r_a + r_o
+$$
+
+Distance to obstacle center:
+
+$$
+d = \sqrt{x^2 + y^2}
+$$
+
+If $d > H + r$, obstacle is ignored.
+
+Otherwise, we compute its angular span
+
+Central angle:
+
+$$
+\theta_c = \text{atan2}(y, x)
+$$
+
+Angular half-width:
+
+$$
+\Delta \theta = \arcsin\left(\frac{r}{d}\right)
+$$
+
+Blocked interval:
+
+$$
+[\theta_c - \Delta \theta,\; \theta_c + \Delta \theta]
 $$
 
 <p align="center">
@@ -224,131 +312,87 @@ $$
   </em>
 </p>
 
-
 ---
 
-### Cutting Visible Ranges
+### Dynamic Obstacles
 
-For each blocked interval $I_i$, we subtract it from the current set of visible ranges.
+Each dynamic obstacle is defined as:
 
-Each subtraction may remove a range entirely, shrink a range, or split a range into two smaller ranges.
+- Position: $p_o \in \mathbb{R}^3$
+- Velocity: $v_o \in \mathbb{R}^3$
+- Radius: $r_o$
 
-After processing all obstacles, we obtain a set of valid angular intervals:
-
-$$
-R = \{ I_0, I_1, \dots, I_n \}
-$$
-
-Each interval $I_k = [\alpha_k, \beta_k]$ represents a collision-free angular range.
-
----
-
-### Selecting the Best Direction
-
-Each interval in $R$ represents a set of safe directions.
-
-The agent typically has a desired direction $\theta_d$ coming from global path planning.  
-Since all obstacles are converted to local space, we assume:
+After transforming to agent-local space:
 
 $$
-\theta_d = 0
+p_o', \quad v_o'
 $$
 
-We select the interval in $R$ closest to $\theta_d$.
-
-The optimal steering angle is $0$ if it lies inside some interval. Otherwise, it is the boundary value minimizing $|\theta - \theta_d|$.
-
-If $R = \emptyset$, the agent is fully blocked and must apply a fallback strategy such as slowing down, rotating in place, or using a higher-level decision.
-
----
-
-## Persistent State
-
-The static formulation works well for static obstacles. However, without persistent state, the agent may oscillate between directions.
-
-To mitigate this, we incorporate the current velocity direction $\theta_v$.
-
-We define a cost function:
+Instead of using fixed agent velocity, we parameterize velocity by steering angle $\theta$:
 
 $$
-C(\theta) 
-=
-(1 - w)\, d(\theta, \theta_d) 
-+
-w\, d(\theta, \theta_v)
-$$
-
-The function $d(\theta_1, \theta_2)$ denotes the minimal angular distance, and $w \in [0,1]$ controls how strongly the current velocity influences the decision.
-
-For each interval $I_k$, we evaluate boundary angles $\theta \in \{\alpha_k, \beta_k\}$ and select the one minimizing $C(\theta)$. This biases the solution toward directions consistent with the current motion and reduces oscillations.
-
----
-
-## Dynamic Obstacles
-
-Applying the static solution to dynamic agents often produces V-shaped formations. Each agent predicts a collision even if all agents move at identical velocities and would never intersect.
-
-To handle dynamic obstacles, we account for relative velocity.
-
-We define:
-
-$$
-f_{\text{dynamic}}(\mathbf{p}_i, \mathbf{v}_i, r_i) \rightarrow I_i
-$$
-
-The vector $\mathbf{p}_i \in \mathbb{R}^2$ is the obstacle position, $\mathbf{v}_i \in \mathbb{R}^2$ is its velocity, and $r_i$ is its radius.
-
-A collision occurs if there exists $\exists\, t > 0, t \in \mathbb{R}, t < \infty$ such that:
-
-$$
-\left\|
-(\mathbf{p}_i + \mathbf{v}_i t)
--
-(\mathbf{p}_a + \mathbf{v}_a(\theta_g) t)
-\right\|
-=
-r_i + r_a
-$$
-
-The vector $\mathbf{p}_a$ is the agent position, $r_a$ is the agent radius, and $\mathbf{v}_a(\theta_g)$ is the agent velocity parameterized by steering angle $\theta_g$ with constant speed $s_a$:
-
-$$
-\mathbf{v}_a(\theta_g)
-=
-s_a
+v_a(\theta) = s_a
 \begin{bmatrix}
-\cos \theta_g \\
-\sin \theta_g
+\cos \theta \\
+\sin \theta
 \end{bmatrix}
 $$
 
-We convert everything into agent local space:
+Relative velocity:
 
 $$
-\tilde{\mathbf{p}}_i = R(\mathbf{p}_i - \mathbf{p}_a),
-\qquad
-\tilde{\mathbf{v}}_i = R(\mathbf{v}_i),
-\qquad
-\tilde{r}_i = r_i + r_a
+v_r(\theta) = v_a(\theta) - v_o'
 $$
 
-The relative-motion condition becomes:
+Relative motion:
 
 $$
-\left|
-\tilde{\mathbf{p}}_i
-+
-(\tilde{\mathbf{v}}_i - \mathbf{v}_a(\theta_g)) t
-\right|
-=
-\tilde{r}_i
+p(t) = p_o' + v_r(\theta) t
 $$
 
-Solving this system for $t$ and $\theta_g$ determines whether a future collision occurs and which angular interval must be blocked.
+Collision condition:
 
-Agents moving in parallel at identical velocity will have zero relative velocity and therefore generate no blocking interval, preventing unnecessary avoidance.
+$$
+\|p_o' + v_r(\theta) t\|^2 = (r_a + r_o)^2
+$$
 
-Solving this function is the most computationally expensive part of the sonar avoidance algorithm.
+Expanding gives quadratic in time:
+
+$$
+a(\theta)t^2 + b(\theta)t + c = 0
+$$
+
+Where:
+
+$$
+a(\theta) = \|v_r(\theta)\|^2
+$$
+
+$$
+b(\theta) = 2\, p_o' \cdot v_r(\theta)
+$$
+
+$$
+c = \|p_o'\|^2 - r^2
+$$
+
+Collision exists if discriminant:
+
+$$
+D(\theta) = b(\theta)^2 - 4a(\theta)c \ge 0
+$$
+
+and smallest positive root:
+
+$$
+t_{min}(\theta) > 0
+\quad \text{and} \quad
+t_{min}(\theta) < \frac{H}{s_a}
+$$
+
+All angles $\theta$ satisfying these conditions form a blocked interval in angular space.
+
+Thus dynamic obstacles generate angular intervals directly by solving the quadratic constraint with respect to $\theta$.
 
 <p align="center">
   <img src="/project-dawn-website/images/sonar-dynamic-obstacle.png" width="600" />
@@ -357,106 +401,175 @@ Solving this function is the most computationally expensive part of the sonar av
   </em>
 </p>
 
+---
+
+### NavMesh Walls
+
+Each wall segment is defined as:
+
+- Start: $p_s \in \mathbb{R}^3$
+- End: $p_e \in \mathbb{R}^3$
+
+After transformation:
+
+$$
+p_s', \quad p_e'
+$$
+
+The wall is treated as a line segment obstacle.
+We compute angular span of both endpoints:
+
+$$
+\theta_s = \text{atan2}(y_s, x_s)
+$$
+
+$$
+\theta_e = \text{atan2}(y_e, x_e)
+$$
+
+The span between them (expanded by agent radius) becomes a blocked interval.
 
 ---
 
-## Navmesh Integration
+### Interval Subtraction
 
-Integrating sonar avoidance with a navmesh is straightforward.  
-The agent collects all nearby navmesh edges and constructs static line obstacles from them.
+All blocked intervals are collected:
+
+$$
+B = \bigcup_i [\theta_i^{min}, \theta_i^{max}]
+$$
+
+Safe space is computed by subtracting blocked intervals from vision space:
+
+$$
+S = \Theta \setminus B
+$$
+
+Result:
+
+$$
+S = \{\text{collision-free steering angles}\}
+$$
+
+---
+
+### Direction Selection
+
+From safe intervals $S$, we select optimal angle $\theta^*$.
 
 We define:
+- Desired angle: $\theta_d = 0$
+- Current velocity angle:
 
 $$
-f_{\text{wall}}(\mathbf{p}_{i,s}, \mathbf{p}_{i,e}) \rightarrow I_i
+\theta_v = \text{atan2}(v_y, v_x)
 $$
 
-The vectors $\mathbf{p}_{i,s} \in \mathbb{R}^2$ and $\mathbf{p}_{i,e} \in \mathbb{R}^2$ denote the start and end positions of the $i$-th navmesh edge.  
-The interval $I_i \subset [\theta_{\min}, \theta_{\max}]$ represents the blocked angular range generated by that edge.
+Cost function:
 
-As with static circular obstacles, the edge endpoints are transformed into agent local space.  
-The resulting angular interval is then subtracted from the visible range set $R$.
+$$
+C(\theta) =
+w_d |\theta - \theta_d|
++
+w_v |\theta - \theta_v|
+$$
+
+Where:
+- $w_d$ controls preference toward goal direction.
+- $w_v$ controls smoothness / inertia.
+
+Optimization:
+
+$$
+\theta^* = \arg\min_{\theta \in S} C(\theta)
+$$
 
 ---
 
-## Smart Stop
+### Steering Output
 
-The algorithm typically terminates when the agent is sufficiently close to its destination.  
-However, like most local avoidance algorithms, sonar avoidance does not guarantee convergence in all scenarios.
+Final steering direction in local space:
 
-Therefore, a higher-level mechanism is required to detect pathological cases and terminate early.
+$$
+d' =
+\begin{bmatrix}
+\cos \theta^* \\
+\sin \theta^*
+\end{bmatrix}
+$$
 
-Two simple strategies are sufficient to handle most remaining scenarios.  
-We call them **Hive Mind Stop** and **Give Up Stop**.
+Transformed back to world space:
+
+$$
+d = R d'
+$$
+
+This direction is used for velocity steering.
 
 ---
 
-### Hive Mind Stop
+## Complexity Analysis
 
-Hive Mind Stop solves termination in group movement.
+Let:
 
-When multiple agents move toward the same destination, typically only one reaches it, while others may oscillate around it indefinitely.
+- $n_s$ = static obstacles
+- $n_d$ = dynamic obstacles
+- $n_w$ = wall segments
 
-To address this, each agent that is within a small threshold distance from the destination inspects nearby dynamic obstacles.  
-If neighboring agents are already stopped, have a similar destination, and are within proximity, the agent also stops.
+Interval construction cost:
 
-This produces stable group termination behavior.
+$$
+O(n_s + n_d + n_w)
+$$
+
+Interval subtraction (after sorting):
+
+$$
+O(k \log k)
+$$
+
+Where:
+
+$$
+k = n_s + n_d + n_w
+$$
+
+Since angular domain is 1D, merging and subtraction are inexpensive compared to 2D linear programming methods.
+
+Total per-agent complexity:
+
+$$
+O(k \log k)
+$$
+
+In practice, near-linear due to small neighborhood sizes.
 
 ---
 
-### Give Up Stop
+## Result
 
-Give Up Stop handles situations where an agent becomes stuck in complex concave obstacle formations.
+### ORCA / RVO
 
-Each agent maintains a progress variable:
+- Operate in full 2D velocity space.
+- Construct half-plane constraints.
+- Solve linear program per agent.
+- Guarantee reciprocal collision avoidance.
+- Complexity depends on constraint solving.
 
-$$
-t_{\text{giveup}} \in [0, t_{\text{giveup,max}}]
-$$
+### Sonar Avoidance
 
-The variable is initialized as:
+- Reduces problem to 1D angular space.
+- Uses interval subtraction instead of half-plane intersection.
+- Avoids linear programming.
+- Naturally integrates static geometry and navmesh walls.
+- Easier SIMD/ECS optimization.
+- Lower constant factors.
 
-$$
-t_{\text{giveup}} = 0
-$$
+Trade-offs:
 
-At each update step, the agent scans nearby dynamic obstacles.
-
-If blocking conditions persist, the timer increases:
-
-$$
-t_{\text{giveup}} \leftarrow \min\left(t_{\text{giveup,max}}, \, t_{\text{giveup}} + \Delta t \right)
-$$
-
-Otherwise, it decreases:
-
-$$
-t_{\text{giveup}} \leftarrow \max\left(0, \, t_{\text{giveup}} - \Delta t \right)
-$$
-
-If
-
-$$
-t_{\text{giveup}} = t_{\text{giveup,max}}
-$$
-
-the agent terminates movement.
-
-This mechanism allows temporary congestion while preventing infinite oscillation in deadlock configurations.
-
----
-
-## Optimization
-
-Sonar avoidance is computationally expensive, and the cost increases with the number of obstacles.
-
-Limiting evaluation to the $n$ closest obstacles provides stable computational cost with a manageable reduction in avoidance quality.
-
----
-
-## Results
-
-Here we compare Sonar Avoidance to Unity’s ORCA implementation in several common RTS scenarios.
+- Does not guarantee strict reciprocity like ORCA.
+- Works best when desired direction dominates behavior.
+- More heuristic but computationally simpler.
 
 <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
   <video width="600" autoplay loop muted playsinline>
@@ -508,10 +621,13 @@ Here we compare Sonar Avoidance to Unity’s ORCA implementation in several comm
 
 ---
 
-### Sonar Disadvantages
+## Summary
 
-It is important to note that Sonar Avoidance has its own limitations.
+The Sonar Avoidance Algorithm:
 
-First, because the algorithm relies on angular visibility, once the field of view becomes fully blocked there is very little information left for decision making. This situation is common in extremely dense groups of agents.
+- Projects obstacles into angular space.
+- Builds blocked angular intervals.
+- Subtracts them from vision domain.
+- Minimizes cost to select optimal steering.
 
-Second, dynamic obstacle avoidance does not explicitly account for acceleration. The model assumes that an agent can change velocity direction relatively quickly. While this assumption works well for most RTS-style units, it can break down for agents with low acceleration or heavy inertia.
+It provides an efficient, scalable alternative to velocity obstacle methods while remaining simple to implement and optimize.
