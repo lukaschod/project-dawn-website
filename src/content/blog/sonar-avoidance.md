@@ -13,7 +13,7 @@ Sonar Avoidance is a local avoidance algorithm for RTS agents that I created for
 
 In this article, I will cover the history of how I came up with the algorithm and explain in detail how it works.
 
-For those interested, Sonar Avoidance is available in Unity. It can be purchased as a standalone local avoidance system under [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) or with full NavMesh integration under [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233). Since 2022, these packages have been downloaded approximately 23,000 times and successfully released in many games. While that number may not sound enormous, these are developers using the system in their own projects, not end users. For that reason, I consider it a significant success and one of the main motivations behind writing this article and sharing insights about the algorithm.
+For those interested, Sonar Avoidance is available in Unity. It can be purchased as a standalone local avoidance system under [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) or with full NavMesh integration under [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233). Since 2022, these packages have been downloaded approximately 23,000 times and have been successfully used in several released games, indicating strong demand for a more game-ready navigation solution.
 
 ---
 
@@ -409,6 +409,7 @@ Each wall segment is defined as:
 
 - Start: $p_s \in \mathbb{R}^3$
 - End: $p_e \in \mathbb{R}^3$
+- Radius is not required, as a typical NavMesh is already built to account for the agent's radius
 
 After transformation:
 
@@ -428,6 +429,13 @@ $$
 $$
 
 The span between them (expanded by agent radius) becomes a blocked interval.
+
+<p align="center">
+  <img src="/project-dawn-website/images/sonar-wall.png" width="600" />
+  <em>
+    Figure 1: The yellow circle represents the agent, and red line the navmesh wall.
+  </em>
+</p>
 
 ---
 
