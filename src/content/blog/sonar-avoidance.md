@@ -9,11 +9,11 @@ tags: ['ai', 'navigation']
 
 # Sonar Avoidance
 
-Sonar Avoidance is a local avoidance algorithm for RTS agents that I created for my own game. It is heavily inspired by StarCraft II and the GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not). Since the talk did not go into algorithmic details and only presented high-level concepts, I consider this implementation fully my own. However, I would not be surprised if someone else independently created something similar under a different name.
+Sonar Avoidance is a local avoidance algorithm for RTS agents that I created for my own game. It is typically combined with a global navigation solution (e.g., a navigation mesh), which provides waypoints, while the algorithm locally avoids obstacles in order to reach those waypoints. It is inspired by StarCraft II and the GDC 2011 talk [AI Navigation: It's Not a Solved Problem - Yet](https://www.gdcvault.com/play/1014514/AI-Navigation-It-s-Not).
 
-In this article, I will cover the history of how I came up with the algorithm and explain in detail how it works.
+In this article, I will cover the history of how I developed the algorithm and explain in detail how it works.
 
-For those interested, Sonar Avoidance is available in Unity. It can be purchased as a standalone local avoidance system under [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) or with full NavMesh integration under [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233). Since 2022, these packages have been downloaded approximately 23,000 times and have been successfully used in several released games, indicating strong demand for a more game-ready navigation solution.
+For those interested, Sonar Avoidance is available on the Unity Asset Store as a standalone local avoidance solution under [Local Avoidance](https://assetstore.unity.com/packages/tools/behavior-ai/local-avoidance-214347) as well as with full Unity NavMesh integration under [Agents Navigation](https://assetstore.unity.com/packages/tools/behavior-ai/agents-navigation-239233). Since 2022, these packages have been downloaded approximately 23,000 times and have been successfully used in several released games, indicating strong demand for a more game-ready navigation solution.
 
 ---
 
@@ -25,7 +25,7 @@ In this section I will cover the motivation behind the algorithm and how it evol
 
 ### Warcraft
 
-In 2014 I started working in Unity this is where I discovered the Unity Engine as tool for creating the games. I quickly fell in love with the tool and decided that I want to create the game with it. This then I started developing my wacraft 3 mobile knock-off.
+In 2014, I started working with Unity. It was there that I discovered the engine as a powerful tool for creating games. I quickly fell in love with the tool and decided that I want to create the game with it. This then I started developing my wacraft 3 mobile knock-off.
 <div style="max-width:500px;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
     <iframe
@@ -64,7 +64,7 @@ NavMesh generation is expensive, but it produces far fewer nodes than grid-based
 
 For dynamic avoidance between moving agents, Unity used [ORCA](https://gamma.cs.unc.edu/ORCA/). ORCA is an extension of RVO designed to provide more accurate multi-agent avoidance.
 
-In many scenarios, ORCA works very well. It produces convincing crowd behavior and handles dense group motion nicely. However, in RTS-style gameplay, several issues became apparent.
+In many scenarios, ORCA works very well. It produces convincing crowd behavior and handles dense group motion nicely. However, in RTS-style gameplay, several limitations became apparent in practice when using Unity’s default configuration.
 
 ---
 
@@ -72,7 +72,7 @@ In many scenarios, ORCA works very well. It produces convincing crowd behavior a
 
 The first major issue appeared in classic RTS situations where units try to surround a target.
 
-With ORCA, agents often clumped on one side instead of properly surrounding the target. In games like Warcraft III, where each unit is important, this is unacceptable because some units would simply stand idle instead of attacking.
+In Unity’s default implementation at the time, agents often clumped on one side instead of properly distributing themselves around the target. In games like Warcraft III, where each unit is important, this is unacceptable because some units would simply stand idle instead of attacking.
 
 The second issue was ORCA’s reliance on velocity modulation. This makes sense in crowd simulations, and there are many papers explaining how density-based velocity adjustment performs well in high congestion scenarios.
 
@@ -80,7 +80,7 @@ However, in RTS games, high congestion is less frequent and large groups often m
 
 The third issue was ORCA’s difficulty escaping concave formations. Agents entering these situations could become permanently stuck.
 
-After encountering these problems, I concluded that NavMesh combined with ORCA would not be sufficient for my game.
+After encountering these problems, I concluded that NavMesh combined with the default ORCA setup would not be sufficient for the gameplay feel I wanted.
 
 ---
 
@@ -203,7 +203,7 @@ Each agent is defined as:
 - Position: $p_a \in \mathbb{R}^3$
 - Velocity: $v_a \in \mathbb{R}^3$
 - Radius: $r_a$
-- Horizon: $H$
+- Horizon: $H$ radius of sonar volume
 - Preferred speed: $s_a$
 
 From global navigation, the agent receives a desired direction:
@@ -250,11 +250,20 @@ $$
 p' = R^{-1}(p - p_a)
 $$
 
-Such that:
+For any world-space velocity or direction vector $v$, the local-space transformation is:
 
 $$
-d' = (1,0,0)
+v' = R^{-1}(v)
 $$
+
+where $R$ is the rotation that aligns the desired direction $d$ with the x-axis.
+
+After transformation, the desired direction becomes:
+$$
+d' = (1,0)
+$$
+
+All subsequent angular computations are performed using the 2D components of $p'$ and $v'$.
 
 ---
 
@@ -328,71 +337,31 @@ $$
 p_o', \quad v_o'
 $$
 
-Instead of using fixed agent velocity, we parameterize velocity by steering angle $\theta$:
+As we are trying to find all $\theta$ angles at which the agent would collide, we do not use $v_a$ directly. Instead, we use the agent’s speed $s_a$ and evaluate all possible steering angles within the allowed angular range:
 
 $$
-v_a(\theta) = s_a
+v_a'(\theta) = s_a
 \begin{bmatrix}
 \cos \theta \\
 \sin \theta
 \end{bmatrix}
 $$
 
-Relative velocity:
-
-$$
-v_r(\theta) = v_a(\theta) - v_o'
-$$
-
-Relative motion:
-
-$$
-p(t) = p_o' + v_r(\theta) t
-$$
-
 Collision condition:
 
 $$
-\|p_o' + v_r(\theta) t\|^2 = (r_a + r_o)^2
+\|p_o' + v_o' t - v_a'(\theta) t\|^2 = (r_a + r_o)^2
 $$
 
-Expanding gives quadratic in time:
+Whereas we only care about dynamic obstacles that are within the sonar volume:
 
 $$
-a(\theta)t^2 + b(\theta)t + c = 0
-$$
-
-Where:
-
-$$
-a(\theta) = \|v_r(\theta)\|^2
-$$
-
-$$
-b(\theta) = 2\, p_o' \cdot v_r(\theta)
-$$
-
-$$
-c = \|p_o'\|^2 - r^2
-$$
-
-Collision exists if discriminant:
-
-$$
-D(\theta) = b(\theta)^2 - 4a(\theta)c \ge 0
-$$
-
-and smallest positive root:
-
-$$
-t_{min}(\theta) > 0
+t > 0
 \quad \text{and} \quad
-t_{min}(\theta) < \frac{H}{s_a}
+t < \frac{H}{s_a}
 $$
 
-All angles $\theta$ satisfying these conditions form a blocked interval in angular space.
-
-Thus dynamic obstacles generate angular intervals directly by solving the quadratic constraint with respect to $\theta$.
+Solving the equation for $\theta$ yields an interval of solutions $[\theta_a, \theta_b]$, which represents the blocked angular interval. In practice, this reduces to solving a quadratic in $t$ for relative motion and deriving the angular bounds from valid collision times. Since the full derivation is lengthy and implementation-dependent, it will not be expanded upon here.
 
 <p align="center">
   <img src="/project-dawn-website/images/sonar-dynamic-obstacle.png" width="600" />
@@ -414,7 +383,7 @@ Each wall segment is defined as:
 After transformation:
 
 $$
-p_s', \quad p_e'
+p_s' = (x_s, y_s), \quad p_e' = (x_e, y_e)
 $$
 
 The wall is treated as a line segment obstacle.
@@ -428,12 +397,16 @@ $$
 \theta_e = \text{atan2}(y_e, x_e)
 $$
 
-The span between them becomes a blocked interval.
+The span between them becomes a blocked interval:
+
+$$
+[\theta_s, \theta_e]
+$$
 
 <p align="center">
   <img src="/project-dawn-website/images/sonar-wall.png" width="600" />
   <em>
-    Figure 1: The yellow circle represents the agent, and red line the navmesh wall.
+    Figure 4: The yellow circle represents the agent, and red line the navmesh wall.
   </em>
 </p>
 
@@ -458,6 +431,8 @@ Result:
 $$
 S = \{\text{collision-free steering angles}\}
 $$
+
+If no safe interval remains, a fallback strategy is required (for example, selecting the minimal-penetration angle or temporarily reducing speed) to avoid deadlock.
 
 ---
 
@@ -514,43 +489,152 @@ $$
 
 This direction is used for velocity steering.
 
+## Smart Stop
+
+The algorithm typically terminates when the agent is sufficiently close to its destination.  
+However, like most local avoidance algorithms, Sonar Avoidance does not guarantee convergence in all configurations.
+
+In particular, purely local steering can result in oscillations or non-convergent behavior when agents compete for the same spatial region.
+
+Therefore, a higher-level termination mechanism is required to detect pathological cases and terminate movement safely.
+
+Two simple strategies are sufficient to handle most remaining scenarios.  
+We call them **Hive Mind Stop** and **Give Up Stop**.
+
+---
+
+### Hive Mind Stop
+
+Hive Mind Stop addresses termination during coordinated group movement.
+
+When multiple agents move toward the same destination (for example, surrounding a target), typically one agent reaches the final position first.  
+The remaining agents may continue oscillating around the destination without finding an exact collision-free configuration.
+
+To stabilize termination, each agent that is within a small threshold distance from the destination performs an additional check:
+
+- Inspect nearby dynamic obstacles.
+- If neighboring agents are:
+  - Already stopped,
+  - Have a similar destination,
+  - And are within a small proximity threshold,
+
+then the agent also terminates movement.
+
+Effectively, termination propagates through the group once sufficient spatial coverage is achieved.
+
+This produces stable and visually coherent group stopping behavior while avoiding persistent micro-oscillation near the goal.
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-no-hive-mind-stop.mp4" type="video/mp4" />
+  </video>
+
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-hive-mind-stop.mp4" type="video/mp4" />
+  </video>
+</div>
+
+<p align="center">
+  <em>
+    Figure 5: Left: agents attempt to reach a single-point destination. Once one agent occupies the space, the others circle indefinitely. Right: with Hive Mind Stop enabled, agents immediately terminate once the first agent stops, as the stop state propagates through the group.
+  </em>
+</p>
+
+---
+
+### Give Up Stop
+
+Give Up Stop handles situations where an agent becomes stuck in complex concave obstacle formations or prolonged deadlock.
+
+Each agent maintains a bounded timer:
+
+$$
+t_{\text{giveup}} \in \left[0,\, t_{\text{giveup}}^{\max}\right]
+$$
+
+Initialization:
+
+$$
+t_{\text{giveup}} = 0
+$$
+
+At each simulation step with timestep $\Delta t$, the agent evaluates whether it is making forward progress toward its destination.
+
+If blocking conditions persist, the timer increases:
+
+$$
+t_{\text{giveup}} \leftarrow 
+\min \left(
+t_{\text{giveup}}^{\max},\,
+t_{\text{giveup}} + \Delta t
+\right)
+$$
+
+If forward progress resumes, the timer decreases:
+
+$$
+t_{\text{giveup}} \leftarrow 
+\max \left(
+0,\,
+t_{\text{giveup}} - \Delta t
+\right)
+$$
+
+If
+
+$$
+t_{\text{giveup}} = t_{\text{giveup}}^{\max}
+$$
+
+the agent terminates movement.
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-no-give-up-stop.mp4" type="video/mp4" />
+  </video>
+
+  <video width="600" autoplay loop muted playsinline>
+    <source src="/project-dawn-website/videos/sonar-give-up-stop.mp4" type="video/mp4" />
+  </video>
+</div>
+
+<p align="center">
+  <em>
+    Figure 6: During formation movement, an agent’s assigned destination can become obstructed and effectively unreachable. While some games (e.g., StarCraft II) use push-out mechanics to alleviate congestion, this does not prevent deadlock when agents are holding position. Left: the agent circles indefinitely because its destination is unreachable. Right: the Give Up Stop mechanism terminates movement after a bounded time.
+  </em>
+</p>
+
 ---
 
 ## Complexity Analysis
 
 Let:
 
-- $n_s$ = static obstacles
-- $n_d$ = dynamic obstacles
-- $n_w$ = wall segments
+- $n_s$ = static obstacles  
+- $n_d$ = dynamic obstacles  
+- $n_w$ = wall segments  
 
-Interval construction cost:
-
-$$
-O(n_s + n_d + n_w)
-$$
-
-Interval subtraction (after sorting):
-
-$$
-O(k \log k)
-$$
-
-Where:
+Let:
 
 $$
 k = n_s + n_d + n_w
 $$
 
-Since angular domain is 1D, merging and subtraction are inexpensive compared to 2D linear programming methods.
+Interval construction requires:
+
+$$
+O(k)
+$$
+
+Since the angular domain is 1D and bounded, interval clipping and subtraction are linear in the number of nearby obstacles.
 
 Total per-agent complexity:
 
 $$
-O(k \log k)
+O(k)
 $$
 
-In practice, near-linear due to small neighborhood sizes.
+In practice, performance is dominated by neighborhood queries and dynamic obstacle evaluation rather than interval subtraction.
 
 ---
 
@@ -591,7 +675,7 @@ Trade-offs:
 
 <p align="center">
   <em>
-    Figure 4: Circling scenario. Yellow agents use Sonar Avoidance to surround the red obstacle and quickly distribute themselves by searching for available openings. The last agent continues circling because no space remains. Blue agents use Unity ORCA and immediately clump on one side of the obstacle instead of attempting a full surround. In both variations, the destination is offset by the combined radii of the agent and the target, and agents stop upon reaching it.
+    Figure 7: Circling scenario. Yellow agents use Sonar Avoidance to surround the red obstacle and quickly distribute themselves by searching for available openings. The last agent continues circling because no space remains. Blue agents use Unity ORCA and immediately clump on one side of the obstacle instead of attempting a full surround. In both variations, the destination is offset by the combined radii of the agent and the target, and agents stop upon reaching it.
   </em>
 </p>
 
@@ -607,7 +691,7 @@ Trade-offs:
 
 <p align="center">
   <em>
-    Figure 5: Concave blockage scenario. The yellow agent uses Sonar Avoidance and attempts to escape the concave trap. Once its visibility volume reaches the obstacle boundaries, it identifies a valid opening and exits through the left side. The blue agent using Unity ORCA stops near the center of the blockage and fails to escape.
+    Figure 8: Concave blockage scenario. The yellow agent uses Sonar Avoidance and attempts to escape the concave trap. Once its visibility volume reaches the obstacle boundaries, it identifies a valid opening and exits through the left side. The blue agent using Unity ORCA stops near the center of the blockage and fails to escape.
   </em>
 </p>
 
@@ -623,19 +707,6 @@ Trade-offs:
 
 <p align="center">
   <em>
-    Figure 6: Group exchange scenario. Yellow and green agents use Sonar Avoidance to reach their opposite destinations. Because each agent’s vision is blocked by the entire opposing group, they treat the group as a single large obstacle and flow around it cohesively. Blue agents using Unity ORCA attempt individual pairwise exchanges, resulting in less coordinated movement.
+    Figure 9: Group exchange scenario. Yellow and green agents use Sonar Avoidance to reach their opposite destinations. Because each agent’s vision is blocked by the entire opposing group, they treat the group as a single large obstacle and flow around it cohesively. Blue agents using Unity ORCA attempt individual pairwise exchanges, resulting in less coordinated movement.
   </em>
 </p>
-
----
-
-## Summary
-
-The Sonar Avoidance Algorithm:
-
-- Projects obstacles into angular space.
-- Builds blocked angular intervals.
-- Subtracts them from vision domain.
-- Minimizes cost to select optimal steering.
-
-It provides an efficient, scalable alternative to velocity obstacle methods while remaining simple to implement and optimize.
