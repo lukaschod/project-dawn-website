@@ -38,9 +38,9 @@ In 2014, I started working with Unity. It was there that I discovered the engine
   </div>
 </div>
 
-Looking back, directly copying Warcraft III, even for mobile, was not the best idea. It would not have passed Google Play or the App Store. At the time, however, I had the naive hope that Blizzard might become interested in the project. That never happened, but I did try.
+Looking back, directly copying Warcraft III, even for mobile, was not the best idea. Without Blizzard’s approval, it would never have been possible to release it officially. At the time, though, I genuinely hoped Blizzard might see the project and become interested. That never happened, but I did try.
 
-The reason I chose this project goes back even further. In my teenage years I was deeply invested in Warcraft III modding. Warcraft III had a tool called the World Editor, which allowed creation of what were called maps. These maps could later be hosted in multiplayer and played by others. The editor was extremely powerful and, in my opinion, one of Blizzard’s greatest creations.
+A significant part of my teenage years was spent modding Warcraft III maps, experimenting with mechanics and building custom experiences. Creating this project in Unity felt like a continuation of that journey, inspired by the World Editor, which was incredibly powerful and, in my opinion, one of Blizzard’s greatest creations.
 
 ---
 
