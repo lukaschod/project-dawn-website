@@ -239,31 +239,54 @@ Where:
 
 ### Local Space Transformation
 
-All computations are performed in local space where:
+All computations are performed in the agent’s local coordinate frame, defined such that:
 
-- Agent is at origin.
-- Desired direction aligns with x-axis.
+- The agent is at the origin.
+- The desired direction aligns with the positive x-axis.
 
-For any world-space point $p$, local transformation is:
-
-$$
-p' = R^{-1}(p - p_a)
-$$
-
-For any world-space velocity or direction vector $v$, the local-space transformation is:
+Let the agent position be:
 
 $$
-v' = R^{-1}(v)
+p_a \in \mathbb{R}^3
 $$
 
-where $R$ is the rotation that aligns the desired direction $d$ with the x-axis.
+and the normalized desired direction:
+
+$$
+d \in \mathbb{R}^3, \quad \|d\| = 1
+$$
+
+We define a rotation function:
+
+$$
+R_d : \mathbb{R}^3 \rightarrow \mathbb{R}^2
+$$
+
+such that $R_d^{-1}$ rotates world-space vectors into a local frame where the desired direction $d$ aligns with the x-axis.
+
+For any world-space point $p$, the local transformation is:
+
+$$
+p' = R_d^{-1}(p - p_a)
+$$
+
+For any world-space velocity or direction vector $v$, the local transformation is:
+
+$$
+v' = R_d^{-1}(v)
+$$
 
 After transformation, the desired direction becomes:
+
 $$
 d' = (1,0)
 $$
 
-All subsequent angular computations are performed using the 2D components of $p'$ and $v'$.
+Since RTS movement is typically planar (e.g., XZ), all angular computations operate on the 2D components of $p'$ and $v'$:
+
+$$
+p' = (x, y), \quad v' = (v_x, v_y)
+$$
 
 ---
 
@@ -289,10 +312,10 @@ $$
 Distance to obstacle center:
 
 $$
-d = \sqrt{x^2 + y^2}
+h = \sqrt{x^2 + y^2}
 $$
 
-If $d > H + r$, obstacle is ignored.
+If $h > H + r$, obstacle is ignored.
 
 Otherwise, we compute its angular span
 
@@ -610,9 +633,10 @@ the agent terminates movement.
 
 Let:
 
-- $n_s$ = static obstacles  
-- $n_d$ = dynamic obstacles  
-- $n_w$ = wall segments  
+- $N$ = total number of agents in the system  
+- $n_s$ = static obstacles within sonar horizon  
+- $n_d$ = dynamic obstacles within sonar horizon  
+- $n_w$ = wall segments intersecting the sonar volume  
 
 Let:
 
@@ -620,7 +644,7 @@ $$
 k = n_s + n_d + n_w
 $$
 
-Interval construction requires:
+For a single agent, interval construction requires:
 
 $$
 O(k)
@@ -628,13 +652,52 @@ $$
 
 Since the angular domain is 1D and bounded, interval clipping and subtraction are linear in the number of nearby obstacles.
 
-Total per-agent complexity:
+System-wide complexity therefore becomes:
 
 $$
-O(k)
+O(N \cdot k)
 $$
 
-In practice, performance is dominated by neighborhood queries and dynamic obstacle evaluation rather than interval subtraction.
+where $k$ represents the average number of relevant nearby obstacles per agent.
+
+---
+
+### Local Neighborhood Assumption
+
+In practice, agents only consider obstacles inside the sonar horizon $H$.  
+This ensures that $k \ll$ total world obstacles.
+
+Using spatial partitioning structures (e.g., grids or trees), neighborhood queries can be treated as approximately constant time on average, keeping $k$ bounded.
+
+---
+
+### Nearest-Obstacle Limiting
+
+In many practical RTS scenarios, it is sufficient to limit the number of processed obstacles:
+
+- Static obstacles: consider only the $k_s$ nearest.
+- Dynamic obstacles: consider only the $k_d$ nearest.
+- Wall segments: typically all intersecting segments within the sonar horizon must be considered to preserve correctness.
+
+With such limits:
+
+$$
+k \le k_s + k_d + n_w
+$$
+
+If $k_s$ and $k_d$ are fixed constants, the effective per-agent complexity becomes:
+
+$$
+O(n_w)
+$$
+
+Thus, overall system complexity approaches:
+
+$$
+O(N \cdot n_w)
+$$
+
+In practice, limiting $k_s + k_d \le 16$ is sufficient for robust behavior, with dynamic obstacle evaluation remaining the dominant computational cost.
 
 ---
 
