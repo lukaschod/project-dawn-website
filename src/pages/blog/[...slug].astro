@@ -21,7 +21,7 @@ const prev = index < sorted.length - 1 ? { id: sorted[index + 1].id, title: sort
 const next = index > 0 ? { id: sorted[index - 1].id, title: sorted[index - 1].data.title } : null;
 
 const { Content } = await render(post);
-const html = await Astro.slots.render('default');
+const html = post.body; // raw markdown
 const readingTimeMin = calculateReadingTimeFromHtml(html ?? '');
 ---
 

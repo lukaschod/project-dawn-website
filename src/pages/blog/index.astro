@@ -1,5 +1,5 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/sections/Footer.astro';
 import Header from '../../components/sections/Header.astro';
@@ -17,8 +17,7 @@ const firstPagePosts = rest.slice(0, PAGE_SIZE);
 const totalPages = Math.max(1, Math.ceil(rest.length / PAGE_SIZE));
 let featuredReading = 0;
 if (featured) {
-  const { Content } = await render(featured);
-  const html = await Astro.slots.render('default');
+  const html = featured.body;
   featuredReading = calculateReadingTimeFromHtml(html ?? '');
 }
 ---
